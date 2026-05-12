@@ -19,51 +19,85 @@
             color: #e0e0e0; 
             margin: 0; 
             padding: 0; 
+            overflow-x: hidden;
         }
 
-        /* 상단 네비게이션 메뉴 */
+        /* 네비게이션: 모바일 최적화 (아코디언 스타일) */
         nav {
-            background: rgba(20, 24, 28, 0.95);
-            padding: 20px;
+            background: rgba(20, 24, 28, 0.98);
+            padding: 12px 15px;
             position: sticky;
             top: 0;
             z-index: 100;
             border-bottom: 1px solid #333;
-            text-align: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+        }
+
+        .menu-wrapper {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .menu-toggle-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: var(--primary-silver);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-sizing: border-box;
         }
 
         .category-menu {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 0 auto;
+            display: none; 
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px; 
+            overflow-y: auto; 
+            background: #1a1d21;
+            border: 1px solid #444;
+            border-radius: 12px;
+            margin-top: 8px;
+            padding: 8px;
+            z-index: 101;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+        }
+
+        .category-menu.active {
+            display: block;
         }
 
         .menu-item {
-            cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 30px;
-            background: #222;
-            border: 1px solid #444;
-            transition: all 0.3s;
-            font-size: 0.9rem;
+            padding: 14px 15px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-align: left;
             color: #bbb;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #2a2a2a;
+            cursor: pointer;
         }
+
+        .menu-item:last-child { border-bottom: none; }
 
         .menu-item:hover, .menu-item.active {
             background: var(--primary-silver);
             color: #000;
-            border-color: #fff;
             font-weight: bold;
-            box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        header { padding: 40px 20px; text-align: center; }
+        header { padding: 30px 20px 10px; text-align: center; }
         h1 { 
-            font-size: 2.2rem; 
+            font-size: 1.6rem; 
             background: linear-gradient(to right, #fff, #888);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -73,60 +107,72 @@
         /* 카드 그리드 */
         .dex-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
             max-width: 1300px;
             margin: 0 auto;
-            padding: 0 20px 50px;
+            padding: 20px;
         }
 
         /* 카드 스타일 */
         .card-item {
             background: var(--card-bg);
             border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 15px;
-            transition: all 0.4s ease;
+            border-radius: 12px;
+            padding: 10px;
+            transition: all 0.3s ease;
             text-align: center;
         }
 
         .card-item:hover {
-            transform: translateY(-8px);
+            transform: translateY(-5px);
             border-color: var(--primary-silver);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
 
         .card-item img {
             width: 100%;
-            border-radius: 8px;
-            margin-bottom: 12px;
+            aspect-ratio: 250/350;
+            object-fit: contain;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: #000;
         }
 
-        .card-name { font-weight: 600; color: #fff; margin-bottom: 8px; font-size: 1rem; }
+        .card-name { font-weight: 500; color: #fff; margin-bottom: 5px; font-size: 0.85rem; height: 2.4em; overflow: hidden; }
         .card-set-badge {
-            font-size: 0.7rem;
-            background: rgba(255,255,255,0.1);
-            padding: 2px 8px;
-            border-radius: 5px;
-            color: #aaa;
+            font-size: 0.65rem;
+            background: rgba(255,255,255,0.07);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #888;
         }
 
-        #loading { text-align: center; padding: 100px; color: #666; }
+        #loading { text-align: center; padding: 100px; color: #666; font-size: 0.9rem; }
+
+        /* 스크롤바 커스텀 */
+        .category-menu::-webkit-scrollbar { width: 6px; }
+        .category-menu::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="category-menu" id="category-menu">
-            <div class="menu-item active" onclick="filterData('ALL', this)">ALL</div>
+        <div class="menu-wrapper">
+            <div class="menu-toggle-btn" onclick="toggleMenu()">
+                <span id="current-series">모든 시리즈 (ALL)</span>
+                <span id="arrow">▼</span>
             </div>
+            <div class="category-menu" id="category-menu">
+                <div class="menu-item active" onclick="filterData('ALL', this)">ALL SERIES</div>
+            </div>
+        </div>
     </nav>
 
     <header>
         <h1 id="view-title">POKÉMON DATABASE</h1>
     </header>
 
-    <div id="loading">데이터를 동기화 중입니다...</div>
+    <div id="loading">데이터를 정밀 동기화 중입니다...</div>
     <div class="dex-container" id="dex-container"></div>
 
     <script>
@@ -137,69 +183,90 @@
         let allCards = [];
 
         async function init() {
-            // 1. 전체 데이터 로드 (시리즈 구분을 위해)
             const { data, error } = await client
                 .from('master_cards')
                 .select('name, series, set_name, image_url_small')
+                .order('series', { ascending: true })
                 .order('name', { ascending: true });
 
             if (error) {
-                document.getElementById('loading').innerText = "데이터 로드 실패";
+                document.getElementById('loading').innerText = "로드 실패: " + error.message;
                 return;
             }
 
             allCards = data;
-            
-            // 2. 시리즈 메뉴 생성
             createMenu();
-            // 3. 전체 카드 렌더링
             renderCards(allCards);
             document.getElementById('loading').style.display = 'none';
         }
 
+        function toggleMenu() {
+            const menu = document.getElementById('category-menu');
+            const arrow = document.getElementById('arrow');
+            const isActive = menu.classList.toggle('active');
+            arrow.innerText = isActive ? '▲' : '▼';
+        }
+
         function createMenu() {
             const menu = document.getElementById('category-menu');
-            // 중복 제거된 시리즈 목록 추출
-            const seriesList = [...new Set(allCards.map(c => c.series))].filter(s => s);
+            const seriesList = [...new Set(allCards.map(c => c.series))].filter(s => s).sort();
             
             seriesList.forEach(series => {
                 const item = document.createElement('div');
                 item.className = 'menu-item';
                 item.innerText = series;
-                item.onclick = (e) => filterData(series, e.target);
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    filterData(series, item);
+                };
                 menu.appendChild(item);
             });
         }
 
         function filterData(series, element) {
-            // 메뉴 활성화 상태 변경
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             element.classList.add('active');
 
-            // 제목 변경
+            document.getElementById('current-series').innerText = series === 'ALL' ? '모든 시리즈 (ALL)' : series;
             document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON DATABASE' : series;
+            
+            document.getElementById('category-menu').classList.remove('active');
+            document.getElementById('arrow').innerText = '▼';
 
-            // 데이터 필터링
             const filtered = series === 'ALL' ? allCards : allCards.filter(c => c.series === series);
             renderCards(filtered);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function renderCards(cards) {
             const container = document.getElementById('dex-container');
-            container.innerHTML = ''; // 기존 카드 제거
+            container.innerHTML = '';
 
+            const fragment = document.createDocumentFragment();
             cards.forEach(card => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item';
                 const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350/1a1d21/ffffff?text=No+Image';
                 
                 cardDiv.innerHTML = `
-                    <img src="${imgSrc}" loading="lazy">
+                    <img src="${imgSrc}" loading="lazy" alt="${card.name}">
                     <div class="card-name">${card.name}</div>
                     <div class="card-set-badge">${card.set_name}</div>
                 `;
-                container.appendChild(cardDiv);
+                fragment.appendChild(cardDiv);
             });
+            container.appendChild(fragment);
+        }
+
+        // 바깥쪽 클릭 시 메뉴 닫기
+        window.onclick = function(event) {
+            if (!event.target.matches('.menu-toggle-btn') && !event.target.matches('.menu-toggle-btn *')) {
+                const menu = document.getElementById('category-menu');
+                if (menu.classList.contains('active')) {
+                    menu.classList.remove('active');
+                    document.getElementById('arrow').innerText = '▼';
+                }
+            }
         }
 
         init();
