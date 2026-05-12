@@ -3,13 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT Pokemon TCG Database</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style><!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOODIT Pokemon TCG Archive</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -20,7 +13,7 @@
             --accent-yellow: #f1c40f;
             --text-pure: #ffffff;
             --text-muted: #8e8e93;
-            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-subtle: rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -29,19 +22,17 @@
             background-color: var(--dark-void);
             color: var(--text-pure);
             font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            margin: 0; padding: 0; overflow-x: hidden;
         }
 
-        /* 1. 상단 가로 스크롤 메뉴 */
+        /* 1. 상단 메뉴 - 영인님이 원하신 깔끔한 실버 포인트 스타일로 복구 */
         nav {
             background: rgba(11, 13, 15, 0.98);
             position: sticky;
             top: 0;
             z-index: 1000;
             border-bottom: 1px solid var(--border-subtle);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(15px);
             padding: 16px 0;
         }
 
@@ -57,7 +48,7 @@
 
         .series-tab {
             display: inline-block;
-            padding: 10px 24px;
+            padding: 10px 22px;
             background: #1c1f24;
             border: 1px solid var(--border-subtle);
             border-radius: 40px;
@@ -65,20 +56,21 @@
             font-weight: 600;
             color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: 0.2s;
         }
 
+        /* 활성화된 탭 색상 복구 (실버/화이트 배경에 검정 글씨) */
         .series-tab.active {
-            background: var(--text-pure);
-            color: var(--dark-void);
-            border-color: var(--text-pure);
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+            background: var(--primary-silver);
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
 
         header { padding: 30px 20px 10px; text-align: center; }
-        h1 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
 
-        /* 2. 1열 리스트 뷰 (카드 이미지 대폭 확대) */
+        /* 2. 1열 리스트 뷰 */
         .dex-container {
             max-width: 500px;
             margin: 0 auto;
@@ -89,7 +81,7 @@
             background: var(--card-surface);
             border-radius: 20px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             border: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
@@ -98,12 +90,12 @@
         }
 
         .card-item img {
-            width: 110px; /* 영인님 요청대로 크기 확대 */
+            width: 110px; /* 크게 유지 */
             height: auto;
             aspect-ratio: 250/350;
             object-fit: contain;
             border-radius: 8px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+            background: #000;
         }
 
         .card-info-summary {
@@ -116,30 +108,32 @@
         .card-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0; }
         .card-set-name { font-size: 0.85rem; color: var(--text-muted); }
 
-        /* 3. 상세 페이지 모달 (상단 카드 고정 + 하단 스크롤) */
+        /* 3. 상세 페이지 팝업 (꼬임 해결: 배경 완벽 차단) */
         .modal {
             display: none;
             position: fixed;
-            z-index: 2000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: var(--dark-void);
+            z-index: 9999; /* 리스트보다 훨씬 위에 위치 */
+            left: 0; top: 0; 
+            width: 100vw; height: 100vh;
+            background-color: var(--dark-void); /* 반투명이 아닌 완전 불투명 또는 진한 배경 */
         }
 
-        .modal.open { display: block; }
+        .modal.open { display: flex; flex-direction: column; }
 
         .modal-container {
             display: flex;
             flex-direction: column;
-            height: 100%;
             width: 100%;
+            height: 100%;
             max-width: 500px;
             margin: 0 auto;
+            background: var(--dark-void);
         }
 
-        /* 카드 고정 영역 */
+        /* 상단 카드 고정 섹션 */
         .detail-header-fixed {
             flex-shrink: 0;
-            padding: 50px 20px 20px;
+            padding: 60px 20px 30px;
             text-align: center;
             background: #16181c;
             border-bottom: 1px solid var(--border-subtle);
@@ -147,41 +141,43 @@
         }
 
         .detail-header-fixed img {
-            width: 200px;
-            border-radius: 10px;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+            width: 220px;
+            border-radius: 12px;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.8));
         }
 
         .close-btn {
             position: absolute;
             top: 20px; right: 20px;
-            font-size: 30px; color: #666;
-            cursor: pointer; z-index: 2100;
+            font-size: 35px; color: #fff;
+            cursor: pointer; z-index: 10001;
+            line-height: 1;
         }
 
-        /* 상세 내용 스크롤 영역 */
+        /* 하단 상세 내용 스크롤 섹션 */
         .detail-scroll-body {
             flex-grow: 1;
             overflow-y: auto;
             padding: 30px 24px 80px;
+            background: var(--dark-void);
         }
 
         .detail-title-group { text-align: center; margin-bottom: 30px; }
-        .detail-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; }
-        .detail-set { color: var(--text-muted); font-size: 0.9rem; }
+        .detail-name { font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; }
+        .detail-set { color: var(--text-muted); font-size: 0.95rem; }
 
         .section-card {
             background: #1a1d21;
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 18px;
+            padding: 22px;
             margin-bottom: 15px;
             border: 1px solid var(--border-subtle);
         }
 
         .section-header {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 800;
-            color: var(--text-muted);
+            color: var(--primary-silver);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 15px;
@@ -189,10 +185,10 @@
 
         .move-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #2a2a2a; }
         .move-item:last-child { border-bottom: none; }
-        .move-name { font-weight: 700; font-size: 1.1rem; color: #fff; }
-        .move-desc { font-size: 0.9rem; color: #ccc; margin-top: 5px; line-height: 1.5; }
+        .move-name { font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 4px; }
+        .move-desc { font-size: 0.9rem; color: #bbb; line-height: 1.5; }
 
-        #loading { text-align: center; padding: 100px; color: #555; }
+        #loading { text-align: center; padding: 100px; color: #444; }
     </style>
 </head>
 <body>
@@ -207,12 +203,12 @@
     <h1 id="view-title">POKÉMON ARCHIVE</h1>
 </header>
 
-<div id="loading">데이터 동기화 중...</div>
+<div id="loading">데이터 로딩 중...</div>
 <div class="dex-container" id="dex-container"></div>
 
 <div id="detail-modal" class="modal">
     <div class="modal-container">
-        <div class="close-btn" onclick="closeModal()">&times;</div>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
         
         <div class="detail-header-fixed">
             <img id="detail-img" src="" alt="Card">
@@ -223,7 +219,6 @@
                 <div class="detail-name" id="detail-name"></div>
                 <div class="detail-set" id="detail-set"></div>
             </div>
-
             <div id="detail-content-target"></div>
         </div>
     </div>
@@ -258,9 +253,9 @@
         element.classList.add('active');
         document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON ARCHIVE' : series;
         
-        let query = client.from('master_cards').select('id, name, hp, types, image_url_large, attacks, abilities, flavor_text, set_name, set_id');
+        let query = client.from('master_cards').select('*');
         if (series !== 'ALL') query = query.eq('series', series);
-        else query = query.limit(200);
+        else query = query.limit(100);
 
         const { data } = await query.order('name', { ascending: true });
         cardsData = data;
@@ -291,456 +286,40 @@
         document.getElementById('detail-scroll-body').scrollTop = 0;
         document.getElementById('detail-img').src = card.image_url_large;
         document.getElementById('detail-name').innerText = card.name;
-        document.getElementById('detail-set').innerText = card.set_name;
+        document.getElementById('detail-set').innerText = `${card.set_name} / ${card.set_id.toUpperCase()}`;
 
         let html = '';
-        if (card.abilities) {
+        // Stats
+        html += `<div class="section-card"><div class="section-header">Stats</div><div style="font-weight:bold; color:var(--accent-yellow);">${card.hp ? card.hp + ' HP' : ''} ${card.types ? ' / ' + card.types.join(', ') : ''}</div></div>`;
+
+        // Abilities
+        if (card.abilities && card.abilities.length > 0) {
             html += `<div class="section-card"><div class="section-header">Abilities</div>`;
             card.abilities.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name}</div><div class="move-desc">${a.text}</div></div>`);
             html += `</div>`;
         }
-        if (card.attacks) {
+        // Attacks
+        if (card.attacks && card.attacks.length > 0) {
             html += `<div class="section-card"><div class="section-header">Attacks</div>`;
             card.attacks.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name} ${a.damage ? `(${a.damage})` : ''}</div><div class="move-desc">${a.text || ''}</div></div>`);
             html += `</div>`;
         }
+        // Flavor
         if (card.flavor_text) {
-            html += `<div class="section-card"><div class="section-header">Pokedex Entry</div><div style="font-style:italic; color:#aaa;">${card.flavor_text}</div></div>`;
+            html += `<div class="section-card"><div class="section-header">Pokedex</div><div style="font-style:italic; color:#aaa; font-size:0.9rem;">${card.flavor_text}</div></div>`;
         }
 
         document.getElementById('detail-content-target').innerHTML = html;
         document.getElementById('detail-modal').classList.add('open');
-        document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden'; // 배경 스크롤 차단
     }
 
     function closeModal() {
         document.getElementById('detail-modal').classList.remove('open');
-        document.body.style.overflow = '';
+        document.body.style.overflow = ''; // 배경 스크롤 허용
     }
 
     init();
 </script>
-</body>
-</html>
-        :root {
-            --primary-silver: #bdc3c7;
-            --dark-bg: #0b0d0f; /* 약간 더 어두운 배경 */
-            --card-bg: #16181c;
-            --accent-glow: rgba(192, 192, 192, 0.15);
-            --text-main: #e0e0e0;
-            --text-muted: #888;
-        }
-
-        body { 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
-            background-color: var(--dark-bg); 
-            color: var(--text-main); 
-            margin: 0; 
-            padding: 0; 
-            overflow-x: hidden;
-        }
-
-        /* 1. 상단 가로 스크롤 메뉴 (유지 및 미세 조정) */
-        nav {
-            background: rgba(15, 18, 21, 0.96);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #2a2a2a;
-            backdrop-filter: blur(12px);
-            padding: 12px 0;
-        }
-
-        .series-scroll-container {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 0 15px;
-            gap: 10px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .series-scroll-container::-webkit-scrollbar { display: none; }
-
-        .series-tab {
-            display: inline-block;
-            padding: 9px 20px;
-            background: #1a1d21;
-            border: 1px solid #333;
-            border-radius: 25px;
-            font-size: 0.85rem;
-            color: #999;
-            cursor: pointer;
-            transition: all 0.25s ease;
-        }
-
-        .series-tab.active {
-            background: var(--primary-silver);
-            color: #000;
-            font-weight: 700;
-            border-color: #fff;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        header { padding: 25px 15px 10px; text-align: center; }
-        h1 { 
-            font-size: 1.4rem; 
-            font-weight: 800;
-            background: linear-gradient(to right, #fff, #999);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0; 
-            letter-spacing: -0.8px; 
-        }
-
-        /* 2. [변경] 카드 그리드 -> 1열 뷰 (Full Width) */
-        .dex-container {
-            max-width: 600px; /* 모바일 중심 레이아웃 */
-            margin: 0 auto;
-            padding: 10px 15px 50px;
-        }
-
-        .card-item {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #25282c;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .card-item:active { /* 클릭 시 살짝 눌리는 효과 */
-            transform: scale(0.98);
-            border-color: #444;
-        }
-
-        /* 1열 뷰에서는 이미지를 살짝 작게 */
-        .card-item img {
-            width: 80px;
-            height: auto;
-            aspect-ratio: 250/350;
-            object-fit: contain;
-            border-radius: 6px;
-            background: #000;
-        }
-
-        .card-info-summary {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .card-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin: 0; }
-        .card-set-badge { font-size: 0.75rem; color: var(--text-muted); }
-
-        #status-msg { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
-
-        /* 3. [추가] 상세 페이지 모달 (Modal) */
-        .modal {
-            display: none; /* 기본 숨김 */
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(8px);
-            overflow-y: auto; /* 상세 내용 길면 스크롤 */
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.open {
-            display: block;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background-color: #121417;
-            margin: 0 auto;
-            padding: 30px 20px 60px;
-            max-width: 500px;
-            min-height: 100%;
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #555;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close-btn:hover { color: #fff; }
-
-        /* 상세 페이지 내부 스타일 */
-        .detail-header { text-align: center; margin-bottom: 25px; }
-        .detail-header img {
-            width: 70%;
-            max-width: 250px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            margin-bottom: 15px;
-        }
-        .detail-name { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0 0 5px 0; }
-        .detail-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
-
-        .detail-section {
-            background: #1a1d21;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 15px;
-            border: 1px solid #2a2a2a;
-        }
-
-        .section-title {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--primary-silver);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 0 12px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* HP 및 타입 스타일 */
-        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .hp-badge { font-size: 1rem; font-weight: 700; color: #ff5e5e; }
-        .type-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 4px;
-            background: #333;
-            color: #fff;
-            text-transform: uppercase;
-        }
-
-        /* 공격/능력 스타일 */
-        .move-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #2a2a2a; }
-        .move-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .move-title { font-weight: 600; color: #fff; display: flex; justify-content: space-between; }
-        .move-damage { color: #f1c40f; }
-        .move-cost { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
-        .move-text { font-size: 0.85rem; color: #ccc; margin-top: 6px; line-height: 1.4; }
-
-        /* 도감 설명 스타일 */
-        .flavor-text { font-style: italic; color: #aaa; font-size: 0.9rem; line-height: 1.5; }
-    </style>
-</head>
-<body>
-
-    <nav>
-        <div class="series-scroll-container" id="series-menu">
-            <div class="series-tab active" onclick="loadCardsBySeries('ALL', this)">ALL</div>
-        </div>
-    </nav>
-
-    <header>
-        <h1 id="view-title">POKÉMON DATABASE</h1>
-    </header>
-
-    <div id="status-msg">데이터를 정밀 동기화 중...</div>
-    <div class="dex-container" id="dex-container"></div>
-
-    <div id="card-detail-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <div id="modal-body">
-                </div>
-        </div>
-    </div>
-
-    <script>
-        const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
-        // 영인님 전용 Supabase anon key 유지
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
-        const client = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        let currentCardsData = []; // 현재 로드된 카드의 전체 데이터를 저장
-
-        async function init() {
-            // 1. 시리즈 목록 목록 로드 (유지)
-            const { data, error } = await client
-                .from('master_cards')
-                .select('series')
-                .not('series', 'is', null);
-
-            if (error) {
-                document.getElementById('status-msg').innerText = "메뉴 로드 실패";
-                return;
-            }
-
-            const seriesList = [...new Set(data.map(item => item.series))].sort();
-            const menu = document.getElementById('series-menu');
-
-            seriesList.forEach(series => {
-                const tab = document.createElement('div');
-                tab.className = 'series-tab';
-                tab.innerText = series;
-                tab.onclick = (e) => loadCardsBySeries(series, e.target);
-                menu.appendChild(tab);
-            });
-
-            loadCardsBySeries('ALL', document.querySelector('.series-tab'));
-        }
-
-        async function loadCardsBySeries(series, element) {
-            // UI 업데이트 및 초기화
-            document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON DATABASE' : series;
-            document.getElementById('status-msg').style.display = 'block';
-            document.getElementById('status-msg').innerText = `${series} 카드를 불러오는 중...`;
-            document.getElementById('dex-container').innerHTML = '';
-
-            // [중요] 상세 페이지를 위해 필요한 모든 필드를 select 하도록 수정
-            let query = client.from('master_cards').select('id, name, hp, types, image_url_large, attacks, abilities, flavor_text, set_name, set_id');
-            
-            if (series !== 'ALL') {
-                query = query.eq('series', series);
-            } else {
-                query = query.limit(300); // 전체보기는 너무 많으니 300장 샘플링
-            }
-
-            const { data, error } = await query.order('name', { ascending: true });
-
-            if (error) {
-                document.getElementById('status-msg').innerText = "데이터 로드 실패";
-                return;
-            }
-
-            currentCardsData = data; // 가져온 데이터 저장
-            renderCards(data);
-            document.getElementById('status-msg').style.display = 'none';
-            element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }
-
-        // [변경] 1열 뷰로 변경된 렌더링 함수
-        function renderCards(cards) {
-            const container = document.getElementById('dex-container');
-            const fragment = document.createDocumentFragment();
-
-            cards.forEach((card, index) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'card-item';
-                cardDiv.onclick = () => openModal(index); // 클릭 시 모달 열기
-
-                // 1열 뷰는 small 이미지를 사용하되, 크게 보여줌
-                const imgSrc = card.image_url_large || 'https://via.placeholder.com/250x350/1a1d21/666666?text=No+Image';
-                
-                cardDiv.innerHTML = `
-                    <img src="${imgSrc}" loading="lazy" alt="${card.name}">
-                    <div class="card-info-summary">
-                        <div class="card-name">${card.name}</div>
-                        <div class="card-set-badge">${card.set_name} / ${card.set_id.toUpperCase()}</div>
-                    </div>
-                `;
-                fragment.appendChild(cardDiv);
-            });
-            container.appendChild(fragment);
-        }
-
-        // [추가] 상세 페이지 모달 함수
-        function openModal(index) {
-            const card = currentCardsData[index];
-            if (!card) return;
-
-            const modalBody = document.getElementById('modal-body');
-            const largeImgSrc = card.image_url_large || 'https://via.placeholder.com/250x350/1a1d21/666666?text=No+Image';
-
-            // 정밀하게 구축된 데이터를 상세 페이지에 주입
-            let html = `
-                <div class="detail-header">
-                    <img src="${largeImgSrc}" alt="${card.name}">
-                    <div class="detail-name">${card.name}</div>
-                    <div class="detail-meta">${card.set_name} / ${card.set_id.toUpperCase()}</div>
-                </div>
-
-                <div class="detail-section">
-                    <div class="section-title">Stats</div>
-                    <div class="stat-row">
-                        ${card.hp ? `<span class="hp-badge">${card.hp} HP</span>` : ''}
-                        ${card.types ? card.types.map(t => `<span class="type-badge">${t}</span>`).join('') : ''}
-                    </div>
-                </div>
-            `;
-
-            // 능력 (Abilities) - JSONB 정밀 주입
-            if (card.abilities && card.abilities.length > 0) {
-                html += `
-                    <div class="detail-section">
-                        <div class="section-title">Abilities</div>
-                        ${card.abilities.map(a => `
-                            <div class="move-item">
-                                <div class="move-title">${a.name}</div>
-                                <div class="move-cost">${a.type}</div>
-                                <div class="move-text">${a.text}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            // 공격 (Attacks) - JSONB 정밀 주입
-            if (card.attacks && card.attacks.length > 0) {
-                html += `
-                    <div class="detail-section">
-                        <div class="section-title">Attacks</div>
-                        ${card.attacks.map(a => `
-                            <div class="move-item">
-                                <div class="move-title">
-                                    <span>${a.name}</span>
-                                    ${a.damage ? `<span class="move-damage">${a.damage}</span>` : ''}
-                                </div>
-                                <div class="move-cost">Cost: ${a.cost.join(', ')}</div>
-                                <div class="move-text">${a.text || ''}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            // 도감 설명 (Flavor Text)
-            if (card.flavor_text) {
-                html += `
-                    <div class="detail-section">
-                        <div class="section-title">Pokédex Entry</div>
-                        <p class="flavor-text">${card.flavor_text}</p>
-                    </div>
-                `;
-            }
-
-            modalBody.innerHTML = html;
-            document.getElementById('card-detail-modal').classList.add('open');
-            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
-        }
-
-        function closeModal() {
-            document.getElementById('card-detail-modal').classList.remove('open');
-            document.body.style.overflow = ''; // 배경 스크롤 복원
-        }
-
-        // 모달 바깥쪽 클릭 시 닫기
-        window.onclick = function(event) {
-            const modal = document.getElementById('card-detail-modal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        init();
-    </script>
 </body>
 </html>
