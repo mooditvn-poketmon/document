@@ -3,42 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT Pokemon TCG Dex</title>
+    <title>MOODIT Pokemon TCG Premium Dex</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        /* 다크 모드 배경 설정 */
+        body { 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
+            background-color: #0f1215; /* 깊은 블랙 배경 */
+            color: #e0e0e0; 
+            margin: 0; 
+            padding: 40px 20px; 
+        }
+
+        h1 { 
+            text-align: center; 
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #bdc3c7, #2c3e50); /* 실버 텍스트 그라데이션 */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 50px;
+        }
         
-        /* 카드 그리드 설정 */
+        /* 카드 그리드 */
         .dex-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1300px;
             margin: 0 auto;
         }
 
-        /* 카드 개별 스타일 */
+        /* 실버 메탈릭 카드 스타일 */
         .card-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+            background: linear-gradient(145deg, #23272b, #1a1d21); /* 다크 그레이 베이스 */
+            border: 1px solid rgba(192, 192, 192, 0.2); /* 은은한 실버 테두리 */
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             text-align: center;
         }
-        .card-item:hover { transform: translateY(-5px); }
-        .card-item img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
-        .card-name { font-weight: bold; font-size: 1rem; color: #222; margin: 5px 0; }
-        .card-set { font-size: 0.8rem; color: #666; background: #eee; padding: 2px 8px; border-radius: 10px; }
-        
-        #loading { text-align: center; font-size: 1.2rem; padding: 50px; }
+
+        /* 호버 시 실버 광택 효과 */
+        .card-item:hover { 
+            transform: translateY(-10px);
+            border-color: rgba(192, 192, 192, 0.8);
+            box-shadow: 0 15px 30px rgba(192, 192, 192, 0.15);
+        }
+
+        /* 카드 이미지 테두리 효과 */
+        .card-item img { 
+            width: 100%; 
+            border-radius: 10px; 
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 텍스트 스타일 */
+        .card-name { 
+            font-weight: 700; 
+            font-size: 1.1rem; 
+            color: #ffffff; 
+            margin: 10px 0 5px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card-set { 
+            display: inline-block;
+            font-size: 0.75rem; 
+            color: #a0a0a0; 
+            border: 1px solid #444;
+            padding: 3px 10px; 
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 로딩 애니메이션 */
+        #loading { 
+            text-align: center; 
+            font-size: 1.2rem; 
+            color: #888;
+            padding: 100px; 
+        }
+
+        /* 카드 장식용 실버 라인 */
+        .card-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+        }
+        .card-item:hover::before {
+            left: 150%;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Pokédex 실시간 도감</h1>
-    <div id="loading">포켓몬 데이터를 불러오는 중...</div>
+    <h1>POKÉDEX PREMIUM</h1>
+    <div id="loading">DB에서 데이터를 동기화 중입니다...</div>
     <div class="dex-container" id="dex-container"></div>
 
     <script>
@@ -50,15 +122,14 @@
             const container = document.getElementById('dex-container');
             const loading = document.getElementById('loading');
 
-            // DB에서 이미지와 이름, 세트명 가져오기
             const { data, error } = await client
                 .from('master_cards')
                 .select('name, set_name, image_url_small')
-                .order('name', { ascending: true }) // 이름순 정렬
-                .limit(50); // 일단 50개만 노출
+                .order('name', { ascending: true })
+                .limit(40); // 40개 먼저 로드
 
             if (error) {
-                loading.innerText = "❌ 데이터 로드 실패: " + error.message;
+                loading.innerText = "❌ 로드 실패: " + error.message;
                 return;
             }
 
@@ -68,8 +139,7 @@
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item';
                 
-                // 이미지가 없을 경우를 대비한 기본 처리
-                const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350?text=No+Image';
+                const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350/1a1d21/ffffff?text=No+Image';
                 
                 cardDiv.innerHTML = `
                     <img src="${imgSrc}" alt="${card.name}">
