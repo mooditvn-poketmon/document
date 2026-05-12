@@ -3,174 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT Pokemon Pokedex</title>
+    <title>MOODIT Pokedex</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --accent-color: #ffd700;
-            --text-main: #ffffff;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, sans-serif;
-            margin: 0; padding: 0;
-        }
-
-        header {
-            padding: 20px;
-            background: #000;
-            position: sticky;
-            top: 0; z-index: 100;
-            border-bottom: 1px solid #333;
-        }
-
-        .series-section {
-            margin: 10px;
-            border-radius: 8px;
-            background: #222;
-            overflow: hidden;
-        }
-
-        .series-title {
-            padding: 15px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            cursor: pointer;
-            border-bottom: 1px solid #333;
-        }
-
-        .series-title:active { background: #333; }
-
-        .pokedex-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 10px;
-            display: none; /* 기본은 숨김 */
-        }
-
-        .card-wrapper {
-            position: relative;
-            aspect-ratio: 2/3;
-            background-color: var(--card-bg);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .card-wrapper.missing { filter: grayscale(100%) brightness(0.4); }
-        .card-wrapper.owned { filter: none; border: 2px solid var(--accent-color); }
-
-        .card-img { width: 100%; height: 100%; object-fit: cover; }
-
-        #loader { text-align: center; padding: 50px; color: #888; }
-        
-        @media (min-width: 768px) {
-            .pokedex-grid { grid-template-columns: repeat(6, 1fr); }
-        }
+        body { background: #121212; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .series-section { background: #222; margin-bottom: 10px; border-radius: 8px; overflow: hidden; }
+        .series-title { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; }
+        .pokedex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px; display: none; }
+        .card-wrapper { aspect-ratio: 2/3; background: #333; filter: grayscale(100%) brightness(0.4); }
+        .card-wrapper.owned { filter: none; border: 2px solid gold; }
+        img { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="margin:0; font-size:1.2rem;">My Digital Pokedex</h1>
-    <div id="collection-stats" style="font-size:0.8rem; color:var(--accent-color); margin-top:5px;">데이터 연결 중...</div>
-</header>
-
-<div id="loader">시리즈 목록을 불러오는 중...</div>
-<div id="pokedex-container"></div>
+    <h2 id="stats">연결 중...</h2>
+    <div id="container"></div>
 
 <script>
-    // 1. Supabase 설정 (영인님 키 적용 완료)
-    const SUPABASE_URL = "https://piiyexmbntafddnlszmm.supabase.co";
-    const SUPABASE_KEY = "";
+    // 영인님이 주신 정보 그대로 입력함
+    const URL = "https://piiyexmbntafddnlszmm.supabase.co";
+    const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
     
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 수퍼베이스 초기화 (이 이름으로 고정)
+    const sb = supabase.createClient(URL, KEY);
 
-    // 2. 초기화: 시리즈 목록만 먼저 가져오기
-    async function initPokedex() {
-        try {
-            const { data, error } = await _supabase
-                .from('master_cards')
-                .select('series')
-                .order('series');
-
-            if (error) throw error;
-
-            // 중복 제거 및 이름 없는 데이터 필터링
-            const uniqueSeries = [...new Set(data.map(item => item.series))].filter(Boolean);
-            
-            const container = document.getElementById('pokedex-container');
-            container.innerHTML = "";
-
-            uniqueSeries.forEach(name => {
-                const section = document.createElement('div');
-                section.className = 'series-section';
-                section.innerHTML = `
-                    <div class="series-title" onclick="toggleSeries('${name.replace(/\'/g, "\\'")}')">
-                        <span>📁 ${name}</span>
-                        <span style="color:gray;">▼</span>
-                    </div>
-                    <div class="pokedex-grid" id="grid-${name.replace(/\s+/g, '-')}"></div>
-                `;
-                container.appendChild(section);
-            });
-
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('collection-stats').innerText = `총 ${uniqueSeries.length}개 시리즈 탐색 가능`;
-
-        } catch (err) {
-            console.error(err);
-            document.getElementById('loader').innerText = "데이터 로드 실패 (권한 설정을 확인하세요)";
-        }
-    }
-
-    // 3. 폴더 열기/닫기 및 카드 로딩
-    async function toggleSeries(seriesName) {
-        const gridId = `grid-${seriesName.replace(/\s+/g, '-')}`;
-        const grid = document.getElementById(gridId);
-
-        // 이미 열려있으면 닫기
-        if (grid.style.display === "grid") {
-            grid.style.display = "none";
+    async function start() {
+        const { data, error } = await sb.from('master_cards').select('series').order('series');
+        
+        if (error) {
+            document.getElementById('stats').innerText = "에러: " + error.message;
             return;
         }
 
-        // 처음 여는 경우 데이터 가져오기
-        if (grid.innerHTML === "") {
-            grid.style.display = "grid";
-            grid.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>카드 소환 중...</p>";
+        const uniqueSeries = [...new Set(data.map(i => i.series))].filter(Boolean);
+        document.getElementById('stats').innerText = `총 ${uniqueSeries.length}개 시리즈`;
 
-            const { data, error } = await _supabase
-                .from('master_cards')
-                .select('id, image_url_small')
-                .eq('series', seriesName);
-
-            if (!error) {
-                grid.innerHTML = "";
-                data.forEach(card => {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'card-wrapper missing';
-                    wrap.onclick = (e) => {
-                        e.stopPropagation();
-                        wrap.classList.toggle('missing');
-                        wrap.classList.toggle('owned');
-                    };
-                    wrap.innerHTML = `<img src="${card.image_url_small}" class="card-img" loading="lazy">`;
-                    grid.appendChild(wrap);
-                });
-            }
-        } else {
-            grid.style.display = "grid";
-        }
+        const container = document.getElementById('container');
+        uniqueSeries.forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'series-section';
+            div.innerHTML = `
+                <div class="series-title" onclick="show('${name.replace(/\'/g, "\\'")}')">📁 ${name} <span>▼</span></div>
+                <div class="pokedex-grid" id="grid-${name.replace(/\s+/g, '-')}"></div>
+            `;
+            container.appendChild(div);
+        });
     }
 
-    initPokedex();
-</script>
+    async function show(name) {
+        const grid = document.getElementById(`grid-${name.replace(/\s+/g, '-')}`);
+        if (grid.style.display === "grid") { grid.style.display = "none"; return; }
+        
+        grid.style.display = "grid";
+        if (grid.innerHTML !== "") return;
 
+        grid.innerHTML = "로딩...";
+        const { data } = await sb.from('master_cards').select('image_url_small').eq('series', name);
+        
+        grid.innerHTML = "";
+        data.forEach(c => {
+            const w = document.createElement('div');
+            w.className = 'card-wrapper';
+            w.onclick = () => w.classList.toggle('owned');
+            w.innerHTML = `<img src="${c.image_url_small}" loading="lazy">`;
+            grid.appendChild(w);
+        });
+    }
+
+    start();
+</script>
 </body>
 </html>
