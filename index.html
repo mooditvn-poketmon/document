@@ -2,57 +2,85 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>DB 연결 최종 확인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOODIT Pokemon TCG Dex</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-    <h1>📡 DB 실시간 연결 확인</h1>
-    <div id="status">연결 시도 중...</div>
-    <ul id="test-list" style="font-size: 1.1rem; line-height: 1.8; color: #333;"></ul>
-
-    <script>
-        // 변수명 충돌 방지를 위해 mySupabaseUrl, mySupabaseKey 등으로 명명합니다.
-        const mySupabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
-        const mySupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
         
-        // 라이브러리 객체와 변수명이 겹치지 않게 myClient로 생성합니다.
-        const myClient = window.supabase.createClient(mySupabaseUrl, mySupabaseKey);
-
-        async function fetchTestData() {
-            const statusBox = document.getElementById('status');
-            const list = document.getElementById('test-list');
-
-            try {
-                // master_cards 테이블에서 상위 10개 레코드의 ID, 이름, 세트이름 가져오기
-                const { data, error } = await myClient
-                    .from('master_cards')
-                    .select('id, name, set_name')
-                    .limit(10);
-
-                if (error) {
-                    console.error("연결 에러 세부사항:", error);
-                    statusBox.innerHTML = `<b style="color:red;">❌ 연결 실패: ${error.message}</b>`;
-                    return;
-                }
-
-                if (data && data.length > 0) {
-                    statusBox.innerHTML = `<b style="color:green;">✅ 연결 성공! DB에 총 ${data.length}개의 데이터가 노출됩니다.</b>`;
-                    data.forEach(item => {
-                        const li = document.createElement('li');
-                        // set_name이 비어있을 경우를 대비해 '이름 없음' 처리
-                        const setName = item.set_name || "세트 정보 없음";
-                        li.innerText = `🃏 카드명: ${item.name} | 📦 세트: ${setName} (ID: ${item.id})`;
-                        list.appendChild(li);
-                    });
-                } else {
-                    statusBox.innerHTML = `<b>⚠️ 연결은 성공했으나, 테이블('master_cards')에 데이터가 한 건도 없습니다.</b>`;
-                }
-            } catch (err) {
-                statusBox.innerHTML = `<b style="color:red;">❌ 실행 오류: ${err.message}</b>`;
-            }
+        /* 카드 그리드 설정 */
+        .dex-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        fetchTestData();
+        /* 카드 개별 스타일 */
+        .card-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            text-align: center;
+        }
+        .card-item:hover { transform: translateY(-5px); }
+        .card-item img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+        .card-name { font-weight: bold; font-size: 1rem; color: #222; margin: 5px 0; }
+        .card-set { font-size: 0.8rem; color: #666; background: #eee; padding: 2px 8px; border-radius: 10px; }
+        
+        #loading { text-align: center; font-size: 1.2rem; padding: 50px; }
+    </style>
+</head>
+<body>
+
+    <h1>Pokédex 실시간 도감</h1>
+    <div id="loading">포켓몬 데이터를 불러오는 중...</div>
+    <div class="dex-container" id="dex-container"></div>
+
+    <script>
+        const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadDex() {
+            const container = document.getElementById('dex-container');
+            const loading = document.getElementById('loading');
+
+            // DB에서 이미지와 이름, 세트명 가져오기
+            const { data, error } = await client
+                .from('master_cards')
+                .select('name, set_name, image_url_small')
+                .order('name', { ascending: true }) // 이름순 정렬
+                .limit(50); // 일단 50개만 노출
+
+            if (error) {
+                loading.innerText = "❌ 데이터 로드 실패: " + error.message;
+                return;
+            }
+
+            loading.style.display = 'none';
+
+            data.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-item';
+                
+                // 이미지가 없을 경우를 대비한 기본 처리
+                const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350?text=No+Image';
+                
+                cardDiv.innerHTML = `
+                    <img src="${imgSrc}" alt="${card.name}">
+                    <div class="card-name">${card.name}</div>
+                    <span class="card-set">${card.set_name}</span>
+                `;
+                container.appendChild(cardDiv);
+            });
+        }
+
+        loadDex();
     </script>
 </body>
 </html>
