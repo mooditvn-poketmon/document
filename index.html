@@ -1,206 +1,82 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Digital Pokedex</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --accent-color: #ffd700;
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-        }
+// 1. Supabase 설정 (기존 키 그대로 사용)
+const SUPABASE_URL = "https://piiyexmbntafddnlszmm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw"; 
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            -webkit-font-smoothing: antialiased;
-        }
+async function initPokedex() {
+    const container = document.getElementById('pokedex-container');
+    document.getElementById('loader').innerText = "시리즈 목록 읽는 중...";
 
-        /* 헤더 디자인 */
-        header {
-            padding: 20px;
-            background: linear-gradient(to bottom, #000, transparent);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
+    try {
+        // [수정 포인트] 모든 카드가 아니라 '시리즈 이름'만 중복 없이 가져옵니다 (매우 가벼움)
+        const { data: seriesList, error } = await supabase
+            .from('master_cards')
+            .select('series')
+            .order('series');
 
-        h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
-        .stats { font-size: 0.9rem; color: var(--accent-color); margin-top: 5px; }
+        if (error) throw error;
 
-        /* 위키피디아식 시리즈 폴더 섹션 */
-        .series-section {
-            padding: 10px 20px;
-            border-left: 3px solid var(--accent-color);
-            margin: 20px 0 10px 10px;
-            background: rgba(255, 215, 0, 0.05);
-        }
+        // 중복 제거 후 버튼 생성
+        const uniqueSeries = [...new Set(seriesList.map(item => item.series))];
+        
+        container.innerHTML = ""; // 초기화
+        uniqueSeries.forEach(seriesName => {
+            const folder = document.createElement('div');
+            folder.className = 'series-section';
+            folder.style.cursor = "pointer";
+            folder.innerHTML = `
+                <div class="series-title">📁 ${seriesName} <span style="font-size:0.8rem; color:gray;">(터치해서 열기)</span></div>
+                <div class="pokedex-grid" id="grid-${seriesName.replace(/\s+/g, '-')}" style="display:none;"></div>
+            `;
+            
+            // 폴더 클릭 시 해당 시리즈 카드만 불러오기
+            folder.onclick = () => loadCardsInSeries(seriesName);
+            container.appendChild(folder);
+        });
 
-        .series-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-main);
-        }
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('collection-stats').innerText = `총 ${uniqueSeries.length}개의 시리즈가 준비됨`;
 
-        /* 도감 그리드 */
-        .pokedex-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 10px;
-        }
+    } catch (err) {
+        console.error(err);
+        document.getElementById('loader').innerText = "목록을 불러오지 못했습니다.";
+    }
+}
 
-        /* 개별 카드 아이템 */
-        .card-wrapper {
-            position: relative;
-            aspect-ratio: 2/3;
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.2s, filter 0.3s;
-            cursor: pointer;
-        }
+async function loadCardsInSeries(seriesName) {
+    const gridId = `grid-${seriesName.replace(/\s+/g, '-')}`;
+    const grid = document.getElementById(gridId);
 
-        .card-wrapper.missing {
-            filter: grayscale(100%) brightness(0.4);
-        }
-
-        .card-wrapper.owned {
-            filter: none;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-            border: 1px solid var(--accent-color);
-        }
-
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* 보유 마킹 배지 */
-        .owned-badge {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: var(--accent-color);
-            color: #000;
-            font-size: 9px;
-            font-weight: bold;
-            padding: 2px 4px;
-            border-radius: 4px;
-            display: none;
-            z-index: 2;
-        }
-
-        .owned .owned-badge { display: block; }
-
-        /* 로딩 애니메이션 */
-        #loader { text-align: center; padding: 20px; color: var(--text-dim); }
-
-        @media (min-width: 768px) {
-            .pokedex-grid { grid-template-columns: repeat(6, 1fr); gap: 15px; padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1 id="pokedex-title">Digital Encyclopedia</h1>
-    <div class="stats" id="collection-stats">Loading Data...</div>
-</header>
-
-<div id="pokedex-container">
-    </div>
-
-<div id="loader">카드 데이터를 불러오는 중...</div>
-
-<script>
-    // 1. Supabase 설정 (영인님의 정보로 수정하세요)
-    const SUPABASE_URL = "https://piiyexmbntafddnlszmm.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw"; // 보안을 위해 나중에 환경변수 처리가 좋지만 일단 테스트용
-    const supabase = document.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let allCards = [];
-
-    async function initPokedex() {
-        try {
-            // 2. 데이터 가져오기 (시리즈순, 번호순 정렬)
-            const { data, error } = await supabase
-                .from('master_cards')
-                .select('id, name, image_url_small, series, set_name, number')
-                .order('series', { ascending: true })
-                .order('number', { ascending: true })
-                .limit(300); // 테스트를 위해 우선 300개만!
-
-            if (error) throw error;
-            allCards = data;
-
-            renderPokedex();
-            updateStats();
-            document.getElementById('loader').style.display = 'none';
-        } catch (err) {
-            console.error(err);
-            document.getElementById('loader').innerText = "데이터를 불러오지 못했습니다.";
-        }
+    // 이미 불러왔다면 열고 닫기만 함
+    if (grid.innerHTML !== "") {
+        grid.style.display = grid.style.display === "none" ? "grid" : "none";
+        return;
     }
 
-    function renderPokedex() {
-        const container = document.getElementById('pokedex-container');
-        let currentSeries = "";
-        let currentGrid = null;
+    grid.style.display = "grid";
+    grid.innerHTML = "<p style='grid-column: 1/-1;'>카드를 불러오는 중...</p>";
 
-        allCards.forEach(card => {
-            // 시리즈가 바뀔 때마다 새로운 '폴더(섹션)' 생성
-            if (card.series !== currentSeries) {
-                currentSeries = card.series;
-                
-                const section = document.createElement('div');
-                section.className = 'series-section';
-                section.innerHTML = `<div class="series-title">${currentSeries}</div>`;
-                container.appendChild(section);
+    // 해당 시리즈의 카드만 딱 긁어옴
+    const { data: cards, error } = await supabase
+        .from('master_cards')
+        .select('id, name, image_url_small')
+        .eq('series', seriesName)
+        .order('number');
 
-                currentGrid = document.createElement('div');
-                currentGrid.className = 'pokedex-grid';
-                container.appendChild(currentGrid);
-            }
-
-            // 카드 엘리먼트 생성
+    if (!error) {
+        grid.innerHTML = ""; // 로딩 문구 제거
+        cards.forEach(card => {
             const cardEl = document.createElement('div');
-            cardEl.className = 'card-wrapper missing'; // 기본은 미보유(흑백)
-            cardEl.onclick = () => toggleOwn(cardEl);
-            
-            cardEl.innerHTML = `
-                <div class="owned-badge">OWNED</div>
-                <img src="${card.image_url_small}" class="card-img" loading="lazy">
-            `;
-            currentGrid.appendChild(cardEl);
+            cardEl.className = 'card-wrapper missing';
+            cardEl.onclick = (e) => {
+                e.stopPropagation(); // 폴더 닫힘 방지
+                cardEl.classList.toggle('missing');
+                cardEl.classList.toggle('owned');
+            };
+            cardEl.innerHTML = `<img src="${card.image_url_small}" class="card-img" loading="lazy">`;
+            grid.appendChild(cardEl);
         });
     }
+}
 
-    // 클릭 시 보유 상태 전환 (나중에 DB 연동 가능)
-    function toggleOwn(el) {
-        el.classList.toggle('missing');
-        el.classList.toggle('owned');
-        updateStats();
-    }
-
-    function updateStats() {
-        const total = allCards.length;
-        const owned = document.querySelectorAll('.owned').length;
-        document.getElementById('collection-stats').innerText = 
-            `Collection Progress: ${owned} / ${total} (${((owned/total)*100 || 0).toFixed(1)}%)`;
-    }
-
-    initPokedex();
-</script>
-
-</body>
-</html>
+initPokedex();
