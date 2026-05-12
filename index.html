@@ -5,7 +5,323 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOODIT Pokemon TCG Database</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOODIT Pokemon TCG Archive</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --primary-silver: #bdc3c7;
+            --dark-void: #0b0d0f;
+            --card-surface: #16181c;
+            --accent-yellow: #f1c40f;
+            --text-pure: #ffffff;
+            --text-muted: #8e8e93;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--dark-void);
+            color: var(--text-pure);
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 1. 상단 가로 스크롤 메뉴 */
+        nav {
+            background: rgba(11, 13, 15, 0.98);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            padding: 16px 0;
+        }
+
+        .series-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0 20px;
+            gap: 12px;
+        }
+
+        .series-scroll-container::-webkit-scrollbar { display: none; }
+
+        .series-tab {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #1c1f24;
+            border: 1px solid var(--border-subtle);
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .series-tab.active {
+            background: var(--text-pure);
+            color: var(--dark-void);
+            border-color: var(--text-pure);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        header { padding: 30px 20px 10px; text-align: center; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+
+        /* 2. 1열 리스트 뷰 (카드 이미지 대폭 확대) */
+        .dex-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 10px 20px 100px;
+        }
+
+        .card-item {
+            background: var(--card-surface);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+        }
+
+        .card-item img {
+            width: 110px; /* 영인님 요청대로 크기 확대 */
+            height: auto;
+            aspect-ratio: 250/350;
+            object-fit: contain;
+            border-radius: 8px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+
+        .card-info-summary {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0; }
+        .card-set-name { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* 3. 상세 페이지 모달 (상단 카드 고정 + 하단 스크롤) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: var(--dark-void);
+        }
+
+        .modal.open { display: block; }
+
+        .modal-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* 카드 고정 영역 */
+        .detail-header-fixed {
+            flex-shrink: 0;
+            padding: 50px 20px 20px;
+            text-align: center;
+            background: #16181c;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .detail-header-fixed img {
+            width: 200px;
+            border-radius: 10px;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            font-size: 30px; color: #666;
+            cursor: pointer; z-index: 2100;
+        }
+
+        /* 상세 내용 스크롤 영역 */
+        .detail-scroll-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px 24px 80px;
+        }
+
+        .detail-title-group { text-align: center; margin-bottom: 30px; }
+        .detail-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; }
+        .detail-set { color: var(--text-muted); font-size: 0.9rem; }
+
+        .section-card {
+            background: #1a1d21;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .section-header {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .move-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #2a2a2a; }
+        .move-item:last-child { border-bottom: none; }
+        .move-name { font-weight: 700; font-size: 1.1rem; color: #fff; }
+        .move-desc { font-size: 0.9rem; color: #ccc; margin-top: 5px; line-height: 1.5; }
+
+        #loading { text-align: center; padding: 100px; color: #555; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="series-scroll-container" id="series-menu">
+        <div class="series-tab active" onclick="fetchBySeries('ALL', this)">ALL</div>
+    </div>
+</nav>
+
+<header>
+    <h1 id="view-title">POKÉMON ARCHIVE</h1>
+</header>
+
+<div id="loading">데이터 동기화 중...</div>
+<div class="dex-container" id="dex-container"></div>
+
+<div id="detail-modal" class="modal">
+    <div class="modal-container">
+        <div class="close-btn" onclick="closeModal()">&times;</div>
+        
+        <div class="detail-header-fixed">
+            <img id="detail-img" src="" alt="Card">
+        </div>
+
+        <div class="detail-scroll-body" id="detail-scroll-body">
+            <div class="detail-title-group">
+                <div class="detail-name" id="detail-name"></div>
+                <div class="detail-set" id="detail-set"></div>
+            </div>
+
+            <div id="detail-content-target"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let cardsData = [];
+
+    async function init() {
+        const { data: seriesData } = await client.from('master_cards').select('series').not('series', 'is', null);
+        const uniqueSeries = [...new Set(seriesData.map(s => s.series))].sort();
+        
+        const menu = document.getElementById('series-menu');
+        uniqueSeries.forEach(series => {
+            const tab = document.createElement('div');
+            tab.className = 'series-tab';
+            tab.innerText = series;
+            tab.onclick = (e) => fetchBySeries(series, e.target);
+            menu.appendChild(tab);
+        });
+
+        await fetchBySeries('ALL', document.querySelector('.series-tab'));
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    async function fetchBySeries(series, element) {
+        document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON ARCHIVE' : series;
+        
+        let query = client.from('master_cards').select('id, name, hp, types, image_url_large, attacks, abilities, flavor_text, set_name, set_id');
+        if (series !== 'ALL') query = query.eq('series', series);
+        else query = query.limit(200);
+
+        const { data } = await query.order('name', { ascending: true });
+        cardsData = data;
+        renderCards(data);
+        element.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    }
+
+    function renderCards(cards) {
+        const container = document.getElementById('dex-container');
+        container.innerHTML = '';
+        cards.forEach((card, idx) => {
+            const div = document.createElement('div');
+            div.className = 'card-item';
+            div.onclick = () => openModal(idx);
+            div.innerHTML = `
+                <img src="${card.image_url_large}" loading="lazy">
+                <div class="card-info-summary">
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-set-name">${card.set_name}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function openModal(idx) {
+        const card = cardsData[idx];
+        document.getElementById('detail-scroll-body').scrollTop = 0;
+        document.getElementById('detail-img').src = card.image_url_large;
+        document.getElementById('detail-name').innerText = card.name;
+        document.getElementById('detail-set').innerText = card.set_name;
+
+        let html = '';
+        if (card.abilities) {
+            html += `<div class="section-card"><div class="section-header">Abilities</div>`;
+            card.abilities.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name}</div><div class="move-desc">${a.text}</div></div>`);
+            html += `</div>`;
+        }
+        if (card.attacks) {
+            html += `<div class="section-card"><div class="section-header">Attacks</div>`;
+            card.attacks.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name} ${a.damage ? `(${a.damage})` : ''}</div><div class="move-desc">${a.text || ''}</div></div>`);
+            html += `</div>`;
+        }
+        if (card.flavor_text) {
+            html += `<div class="section-card"><div class="section-header">Pokedex Entry</div><div style="font-style:italic; color:#aaa;">${card.flavor_text}</div></div>`;
+        }
+
+        document.getElementById('detail-content-target').innerHTML = html;
+        document.getElementById('detail-modal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('detail-modal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    init();
+</script>
+</body>
+</html>
         :root {
             --primary-silver: #bdc3c7;
             --dark-bg: #0b0d0f; /* 약간 더 어두운 배경 */
