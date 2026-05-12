@@ -14,177 +14,96 @@
         }
 
         body { 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
+            font-family: 'Pretendard', sans-serif; 
             background-color: var(--dark-bg); 
             color: #e0e0e0; 
             margin: 0; 
             padding: 0; 
-            overflow-x: hidden;
         }
 
-        /* 네비게이션: 모바일 최적화 고정 메뉴 */
+        /* 상단 가로 스크롤 메뉴 */
         nav {
-            background: rgba(20, 24, 28, 0.98);
-            padding: 12px 15px;
+            background: rgba(20, 24, 28, 0.95);
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 100;
             border-bottom: 1px solid #333;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(10px);
+            padding: 10px 0;
         }
 
-        .menu-wrapper {
-            max-width: 500px;
-            margin: 0 auto;
-            position: relative;
+        .series-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 5px 15px;
+            gap: 10px;
+            -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
         }
 
-        /* 현재 선택된 시리즈를 보여주는 토글 버튼 */
-        .menu-toggle-btn {
-            width: 100%;
-            padding: 12px 20px;
+        /* 스크롤바 숨기기 */
+        .series-scroll-container::-webkit-scrollbar { display: none; }
+
+        .series-tab {
+            display: inline-block;
+            padding: 8px 18px;
             background: #222;
             border: 1px solid #444;
-            border-radius: 12px;
-            color: var(--primary-silver);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #aaa;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            box-sizing: border-box;
+            transition: all 0.3s;
         }
 
-        /* 드롭다운 리스트 상자 */
-        .category-menu {
-            display: none; 
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            max-height: 350px; 
-            overflow-y: auto; 
-            background: #1a1d21;
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 8px;
-            z-index: 1001;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-        }
-
-        .category-menu.active {
-            display: block;
-        }
-
-        .menu-item {
-            padding: 14px 15px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            text-align: left;
-            color: #bbb;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #2a2a2a;
-            cursor: pointer;
-        }
-
-        .menu-item:last-child { border-bottom: none; }
-
-        .menu-item:hover, .menu-item.active {
+        .series-tab.active {
             background: var(--primary-silver);
             color: #000;
             font-weight: bold;
+            border-color: #fff;
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
-        header { padding: 30px 20px 10px; text-align: center; }
-        h1 { 
-            font-size: 1.6rem; 
-            background: linear-gradient(to right, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-            letter-spacing: -1px;
-        }
+        header { padding: 20px 15px 5px; text-align: center; }
+        h1 { font-size: 1.3rem; color: #fff; margin: 0; letter-spacing: -0.5px; }
 
-        /* 카드 그리드 레이아웃 */
         .dex-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            max-width: 1400px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            max-width: 1300px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
 
-        /* 카드 개별 아이템 스타일 */
         .card-item {
             background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 12px;
-            padding: 10px;
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            padding: 8px;
             text-align: center;
-        }
-
-        .card-item:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-silver);
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .card-item img {
             width: 100%;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #000;
             aspect-ratio: 250/350;
             object-fit: contain;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            background: #000;
         }
 
-        .card-name { 
-            font-weight: 500; 
-            color: #fff; 
-            margin-bottom: 5px; 
-            font-size: 0.85rem; 
-            height: 2.4em; 
-            line-height: 1.2;
-            overflow: hidden; 
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
+        .card-name { font-size: 0.8rem; font-weight: 500; color: #fff; height: 2.4em; overflow: hidden; margin-bottom: 4px; }
+        .card-set-badge { font-size: 0.65rem; color: #666; }
 
-        .card-set-badge {
-            font-size: 0.65rem;
-            background: rgba(255,255,255,0.07);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #888;
-            display: inline-block;
-        }
-
-        #loading { 
-            text-align: center; 
-            padding: 100px 20px; 
-            color: #888; 
-            font-size: 1rem; 
-        }
-
-        /* 스크롤바 디자인 */
-        .category-menu::-webkit-scrollbar { width: 6px; }
-        .category-menu::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        #status-msg { text-align: center; padding: 50px; color: #666; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="menu-wrapper">
-            <div class="menu-toggle-btn" onclick="toggleMenu(event)">
-                <span id="current-series">모든 시리즈 (ALL)</span>
-                <span id="arrow">▼</span>
-            </div>
-            <div class="category-menu" id="category-menu">
-                <div class="menu-item active" onclick="filterData('ALL', this)">ALL SERIES</div>
-            </div>
+        <div class="series-scroll-container" id="series-menu">
+            <div class="series-tab active" onclick="loadCardsBySeries('ALL', this)">ALL</div>
         </div>
     </nav>
 
@@ -192,7 +111,7 @@
         <h1 id="view-title">POKÉMON DATABASE</h1>
     </header>
 
-    <div id="loading">20,000+ 데이터를 정밀 동기화 중입니다...</div>
+    <div id="status-msg">데이터를 불러오는 중...</div>
     <div class="dex-container" id="dex-container"></div>
 
     <script>
@@ -200,112 +119,82 @@
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let allCards = [];
-
         async function init() {
-            // [중요] .limit(25000)을 추가하여 전체 데이터를 가져오도록 수정
+            // 1. 전체 시리즈 목록만 Distinct하게 가져오기
+            // 데이터가 많으므로 시리즈 필드만 뽑아서 중복 제거
             const { data, error } = await client
                 .from('master_cards')
-                .select('name, series, set_name, image_url_small')
-                .order('series', { ascending: true })
-                .order('name', { ascending: true })
-                .limit(25000); 
+                .select('series')
+                .not('series', 'is', null);
 
             if (error) {
-                document.getElementById('loading').innerText = "데이터 로드 중 오류가 발생했습니다.";
-                console.error(error);
+                document.getElementById('status-msg').innerText = "메뉴 로드 실패";
                 return;
             }
 
-            allCards = data;
-            
-            // 시리즈 목록을 먼저 만들고 렌더링
-            createMenu();
-            renderCards(allCards);
-            
-            document.getElementById('loading').style.display = 'none';
-        }
+            const seriesList = [...new Set(data.map(item => item.series))].sort();
+            const menu = document.getElementById('series-menu');
 
-        // 메뉴 열고 닫기
-        function toggleMenu(e) {
-            e.stopPropagation();
-            const menu = document.getElementById('category-menu');
-            const arrow = document.getElementById('arrow');
-            const isActive = menu.classList.toggle('active');
-            arrow.innerText = isActive ? '▲' : '▼';
-        }
-
-        // 중복 제거된 시리즈 목록으로 메뉴 생성
-        function createMenu() {
-            const menu = document.getElementById('category-menu');
-            // 2만 장의 카드에서 고유한 시리즈명만 추출하여 정렬
-            const seriesList = [...new Set(allCards.map(c => c.series))].filter(s => s).sort();
-            
             seriesList.forEach(series => {
-                const item = document.createElement('div');
-                item.className = 'menu-item';
-                item.innerText = series;
-                item.onclick = (e) => {
-                    e.stopPropagation();
-                    filterData(series, item);
-                };
-                menu.appendChild(item);
+                const tab = document.createElement('div');
+                tab.className = 'series-tab';
+                tab.innerText = series;
+                tab.onclick = (e) => loadCardsBySeries(series, e.target);
+                menu.appendChild(tab);
             });
+
+            // 초기 화면: ALL 데이터 로드
+            loadCardsBySeries('ALL', document.querySelector('.series-tab'));
         }
 
-        // 특정 시리즈 필터링
-        function filterData(series, element) {
-            // 메뉴 UI 업데이트
-            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        async function loadCardsBySeries(series, element) {
+            // UI 업데이트
+            document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
             element.classList.add('active');
-
-            // 상단 텍스트 변경
-            document.getElementById('current-series').innerText = series === 'ALL' ? '모든 시리즈 (ALL)' : series;
             document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON DATABASE' : series;
-            
-            // 메뉴 닫기
-            document.getElementById('category-menu').classList.remove('active');
-            document.getElementById('arrow').innerText = '▼';
+            document.getElementById('status-msg').style.display = 'block';
+            document.getElementById('status-msg').innerText = `${series} 카드를 불러오는 중...`;
+            document.getElementById('dex-container').innerHTML = '';
 
-            // 데이터 필터링 후 다시 그리기
-            const filtered = series === 'ALL' ? allCards : allCards.filter(c => c.series === series);
-            renderCards(filtered);
+            // API 호출 (시리즈별 필터링)
+            let query = client.from('master_cards').select('name, set_name, image_url_small');
             
-            // 상단으로 부드럽게 이동
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (series !== 'ALL') {
+                query = query.eq('series', series);
+            } else {
+                query = query.limit(500); // 전체보기는 너무 많으니 500장만 샘플링
+            }
+
+            const { data, error } = await query.order('name', { ascending: true });
+
+            if (error) {
+                document.getElementById('status-msg').innerText = "데이터 로드 실패";
+                return;
+            }
+
+            renderCards(data);
+            document.getElementById('status-msg').style.display = 'none';
+            // 탭 클릭 시 자동으로 해당 탭이 중앙 근처로 오게 스크롤
+            element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
 
-        // 카드 렌더링 최적화
         function renderCards(cards) {
             const container = document.getElementById('dex-container');
-            container.innerHTML = '';
-
-            // 성능을 위해 DocumentFragment 사용
             const fragment = document.createDocumentFragment();
+
             cards.forEach(card => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item';
-                
-                // 이미지 없을 경우 대비
-                const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350/1a1d21/ffffff?text=No+Image';
+                const imgSrc = card.image_url_small || 'https://via.placeholder.com/150x210/1a1d21/666666?text=No+Image';
                 
                 cardDiv.innerHTML = `
-                    <img src="${imgSrc}" loading="lazy" alt="${card.name}">
+                    <img src="${imgSrc}" loading="lazy">
                     <div class="card-name">${card.name}</div>
                     <div class="card-set-badge">${card.set_name}</div>
                 `;
                 fragment.appendChild(cardDiv);
             });
             container.appendChild(fragment);
-        }
-
-        // 메뉴 바깥쪽 클릭 시 자동 닫기
-        window.onclick = function(event) {
-            const menu = document.getElementById('category-menu');
-            if (menu.classList.contains('active')) {
-                menu.classList.remove('active');
-                document.getElementById('arrow').innerText = '▼';
-            }
         }
 
         init();
