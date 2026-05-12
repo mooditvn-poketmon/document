@@ -8,95 +8,219 @@
     <style>
         :root {
             --primary-silver: #bdc3c7;
-            --dark-bg: #0f1215;
-            --card-bg: #1a1d21;
-            --accent-glow: rgba(192, 192, 192, 0.2);
+            --dark-bg: #0b0d0f; /* 약간 더 어두운 배경 */
+            --card-bg: #16181c;
+            --accent-glow: rgba(192, 192, 192, 0.15);
+            --text-main: #e0e0e0;
+            --text-muted: #888;
         }
 
         body { 
-            font-family: 'Pretendard', sans-serif; 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
             background-color: var(--dark-bg); 
-            color: #e0e0e0; 
+            color: var(--text-main); 
             margin: 0; 
             padding: 0; 
+            overflow-x: hidden;
         }
 
-        /* 상단 가로 스크롤 메뉴 */
+        /* 1. 상단 가로 스크롤 메뉴 (유지 및 미세 조정) */
         nav {
-            background: rgba(20, 24, 28, 0.95);
+            background: rgba(15, 18, 21, 0.96);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid #333;
-            backdrop-filter: blur(10px);
-            padding: 10px 0;
+            border-bottom: 1px solid #2a2a2a;
+            backdrop-filter: blur(12px);
+            padding: 12px 0;
         }
 
         .series-scroll-container {
             display: flex;
             overflow-x: auto;
             white-space: nowrap;
-            padding: 5px 15px;
+            padding: 0 15px;
             gap: 10px;
-            -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* 스크롤바 숨기기 */
         .series-scroll-container::-webkit-scrollbar { display: none; }
 
         .series-tab {
             display: inline-block;
-            padding: 8px 18px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 20px;
+            padding: 9px 20px;
+            background: #1a1d21;
+            border: 1px solid #333;
+            border-radius: 25px;
             font-size: 0.85rem;
-            color: #aaa;
+            color: #999;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.25s ease;
         }
 
         .series-tab.active {
             background: var(--primary-silver);
             color: #000;
-            font-weight: bold;
+            font-weight: 700;
             border-color: #fff;
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        header { padding: 20px 15px 5px; text-align: center; }
-        h1 { font-size: 1.3rem; color: #fff; margin: 0; letter-spacing: -0.5px; }
+        header { padding: 25px 15px 10px; text-align: center; }
+        h1 { 
+            font-size: 1.4rem; 
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0; 
+            letter-spacing: -0.8px; 
+        }
 
+        /* 2. [변경] 카드 그리드 -> 1열 뷰 (Full Width) */
         .dex-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            max-width: 1300px;
+            max-width: 600px; /* 모바일 중심 레이아웃 */
             margin: 0 auto;
-            padding: 15px;
+            padding: 10px 15px 50px;
         }
 
         .card-item {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 8px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #25282c;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
+        .card-item:active { /* 클릭 시 살짝 눌리는 효과 */
+            transform: scale(0.98);
+            border-color: #444;
+        }
+
+        /* 1열 뷰에서는 이미지를 살짝 작게 */
         .card-item img {
-            width: 100%;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            background: #000;
+            width: 80px;
+            height: auto;
             aspect-ratio: 250/350;
             object-fit: contain;
+            border-radius: 6px;
+            background: #000;
         }
 
-        .card-name { font-size: 0.8rem; font-weight: 500; color: #fff; height: 2.4em; overflow: hidden; margin-bottom: 4px; }
-        .card-set-badge { font-size: 0.65rem; color: #666; }
+        .card-info-summary {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
-        #status-msg { text-align: center; padding: 50px; color: #666; font-size: 0.9rem; }
+        .card-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin: 0; }
+        .card-set-badge { font-size: 0.75rem; color: var(--text-muted); }
+
+        #status-msg { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
+
+        /* 3. [추가] 상세 페이지 모달 (Modal) */
+        .modal {
+            display: none; /* 기본 숨김 */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(8px);
+            overflow-y: auto; /* 상세 내용 길면 스크롤 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.open {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: #121417;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+            max-width: 500px;
+            min-height: 100%;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #555;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        /* 상세 페이지 내부 스타일 */
+        .detail-header { text-align: center; margin-bottom: 25px; }
+        .detail-header img {
+            width: 70%;
+            max-width: 250px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            margin-bottom: 15px;
+        }
+        .detail-name { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0 0 5px 0; }
+        .detail-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
+
+        .detail-section {
+            background: #1a1d21;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-silver);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* HP 및 타입 스타일 */
+        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .hp-badge { font-size: 1rem; font-weight: 700; color: #ff5e5e; }
+        .type-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* 공격/능력 스타일 */
+        .move-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #2a2a2a; }
+        .move-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .move-title { font-weight: 600; color: #fff; display: flex; justify-content: space-between; }
+        .move-damage { color: #f1c40f; }
+        .move-cost { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
+        .move-text { font-size: 0.85rem; color: #ccc; margin-top: 6px; line-height: 1.4; }
+
+        /* 도감 설명 스타일 */
+        .flavor-text { font-style: italic; color: #aaa; font-size: 0.9rem; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -111,17 +235,27 @@
         <h1 id="view-title">POKÉMON DATABASE</h1>
     </header>
 
-    <div id="status-msg">데이터를 불러오는 중...</div>
+    <div id="status-msg">데이터를 정밀 동기화 중...</div>
     <div class="dex-container" id="dex-container"></div>
+
+    <div id="card-detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modal-body">
+                </div>
+        </div>
+    </div>
 
     <script>
         const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
+        // 영인님 전용 Supabase anon key 유지
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+        let currentCardsData = []; // 현재 로드된 카드의 전체 데이터를 저장
+
         async function init() {
-            // 1. 전체 시리즈 목록만 Distinct하게 가져오기
-            // 데이터가 많으므로 시리즈 필드만 뽑아서 중복 제거
+            // 1. 시리즈 목록 목록 로드 (유지)
             const { data, error } = await client
                 .from('master_cards')
                 .select('series')
@@ -143,12 +277,11 @@
                 menu.appendChild(tab);
             });
 
-            // 초기 화면: ALL 데이터 로드
             loadCardsBySeries('ALL', document.querySelector('.series-tab'));
         }
 
         async function loadCardsBySeries(series, element) {
-            // UI 업데이트
+            // UI 업데이트 및 초기화
             document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
             element.classList.add('active');
             document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON DATABASE' : series;
@@ -156,13 +289,13 @@
             document.getElementById('status-msg').innerText = `${series} 카드를 불러오는 중...`;
             document.getElementById('dex-container').innerHTML = '';
 
-            // API 호출 (시리즈별 필터링)
-            let query = client.from('master_cards').select('name, set_name, image_url_small');
+            // [중요] 상세 페이지를 위해 필요한 모든 필드를 select 하도록 수정
+            let query = client.from('master_cards').select('id, name, hp, types, image_url_large, attacks, abilities, flavor_text, set_name, set_id');
             
             if (series !== 'ALL') {
                 query = query.eq('series', series);
             } else {
-                query = query.limit(500); // 전체보기는 너무 많으니 500장만 샘플링
+                query = query.limit(300); // 전체보기는 너무 많으니 300장 샘플링
             }
 
             const { data, error } = await query.order('name', { ascending: true });
@@ -172,29 +305,123 @@
                 return;
             }
 
+            currentCardsData = data; // 가져온 데이터 저장
             renderCards(data);
             document.getElementById('status-msg').style.display = 'none';
-            // 탭 클릭 시 자동으로 해당 탭이 중앙 근처로 오게 스크롤
             element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
 
+        // [변경] 1열 뷰로 변경된 렌더링 함수
         function renderCards(cards) {
             const container = document.getElementById('dex-container');
             const fragment = document.createDocumentFragment();
 
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item';
-                const imgSrc = card.image_url_small || 'https://via.placeholder.com/150x210/1a1d21/666666?text=No+Image';
+                cardDiv.onclick = () => openModal(index); // 클릭 시 모달 열기
+
+                // 1열 뷰는 small 이미지를 사용하되, 크게 보여줌
+                const imgSrc = card.image_url_large || 'https://via.placeholder.com/250x350/1a1d21/666666?text=No+Image';
                 
                 cardDiv.innerHTML = `
-                    <img src="${imgSrc}" loading="lazy">
-                    <div class="card-name">${card.name}</div>
-                    <div class="card-set-badge">${card.set_name}</div>
+                    <img src="${imgSrc}" loading="lazy" alt="${card.name}">
+                    <div class="card-info-summary">
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-set-badge">${card.set_name} / ${card.set_id.toUpperCase()}</div>
+                    </div>
                 `;
                 fragment.appendChild(cardDiv);
             });
             container.appendChild(fragment);
+        }
+
+        // [추가] 상세 페이지 모달 함수
+        function openModal(index) {
+            const card = currentCardsData[index];
+            if (!card) return;
+
+            const modalBody = document.getElementById('modal-body');
+            const largeImgSrc = card.image_url_large || 'https://via.placeholder.com/250x350/1a1d21/666666?text=No+Image';
+
+            // 정밀하게 구축된 데이터를 상세 페이지에 주입
+            let html = `
+                <div class="detail-header">
+                    <img src="${largeImgSrc}" alt="${card.name}">
+                    <div class="detail-name">${card.name}</div>
+                    <div class="detail-meta">${card.set_name} / ${card.set_id.toUpperCase()}</div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">Stats</div>
+                    <div class="stat-row">
+                        ${card.hp ? `<span class="hp-badge">${card.hp} HP</span>` : ''}
+                        ${card.types ? card.types.map(t => `<span class="type-badge">${t}</span>`).join('') : ''}
+                    </div>
+                </div>
+            `;
+
+            // 능력 (Abilities) - JSONB 정밀 주입
+            if (card.abilities && card.abilities.length > 0) {
+                html += `
+                    <div class="detail-section">
+                        <div class="section-title">Abilities</div>
+                        ${card.abilities.map(a => `
+                            <div class="move-item">
+                                <div class="move-title">${a.name}</div>
+                                <div class="move-cost">${a.type}</div>
+                                <div class="move-text">${a.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 공격 (Attacks) - JSONB 정밀 주입
+            if (card.attacks && card.attacks.length > 0) {
+                html += `
+                    <div class="detail-section">
+                        <div class="section-title">Attacks</div>
+                        ${card.attacks.map(a => `
+                            <div class="move-item">
+                                <div class="move-title">
+                                    <span>${a.name}</span>
+                                    ${a.damage ? `<span class="move-damage">${a.damage}</span>` : ''}
+                                </div>
+                                <div class="move-cost">Cost: ${a.cost.join(', ')}</div>
+                                <div class="move-text">${a.text || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 도감 설명 (Flavor Text)
+            if (card.flavor_text) {
+                html += `
+                    <div class="detail-section">
+                        <div class="section-title">Pokédex Entry</div>
+                        <p class="flavor-text">${card.flavor_text}</p>
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = html;
+            document.getElementById('card-detail-modal').classList.add('open');
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+        }
+
+        function closeModal() {
+            document.getElementById('card-detail-modal').classList.remove('open');
+            document.body.style.overflow = ''; // 배경 스크롤 복원
+        }
+
+        // 모달 바깥쪽 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('card-detail-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
         }
 
         init();
