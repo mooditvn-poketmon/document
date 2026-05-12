@@ -2,68 +2,47 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT Pokedex Fix</title>
+    <title>DB 연결 테스트</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { background: #121212; color: #eee; font-family: sans-serif; padding: 20px; }
-        #status { padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #222; border: 1px solid #444; }
-        .card-item { display: inline-block; width: 100px; margin: 5px; }
-        img { width: 100%; border-radius: 4px; }
-        .error { color: #ff6b6b; font-weight: bold; }
-    </small></style>
 </head>
 <body>
-    <div id="status">📡 시스템 가동 중...</div>
-    <div id="debug-info" style="font-size: 12px; color: #888; margin-bottom: 20px;"></div>
-    <div id="display-area"></div>
+    <h1>📡 DB 연결 테스트</h1>
+    <div id="status">데이터 요청 중...</div>
+    <ul id="card-list"></ul>
 
-<script>
-    const URL = "https://piiyexmbntafddnlszmm.supabase.co";
-    const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
-    const sb = supabase.createClient(URL, KEY);
+    <script>
+        const URL = "https://piiyexmbntafddnlszmm.supabase.co";
+        const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+        const supabaseClient = supabase.createClient(URL, KEY);
 
-    async function checkData() {
-        const status = document.getElementById('status');
-        const debug = document.getElementById('debug-info');
-        const display = document.getElementById('display-area');
+        async function testConnection() {
+            const listElement = document.getElementById('card-list');
+            const statusElement = document.getElementById('status');
 
-        try {
-            // 1. 단순 연결 테스트 (1개만 가져오기)
-            debug.innerText = "Supabase 서버에 응답 요청 중...";
-            const { data, error, status: httpStatus } = await sb.from('master_cards').select('name, image_url_small').limit(20);
+            // master_cards 테이블에서 딱 20개만 가져와보기
+            const { data, error } = await supabaseClient
+                .from('master_cards')
+                .select('name, set_name')
+                .limit(20);
 
             if (error) {
-                status.innerHTML = `<span class="error">❌ 에러 발생: ${error.message} (코드: ${error.code})</span>`;
-                debug.innerText = "RLS 정책이나 테이블 이름을 다시 확인하세요.";
+                statusElement.innerText = "❌ 에러 발생: " + error.message;
                 return;
             }
 
-            if (!data || data.length === 0) {
-                status.innerHTML = "⚠️ 연결은 됐으나 테이블이 비어있습니다 (0 rows).";
-                return;
+            if (data && data.length > 0) {
+                statusElement.innerText = `✅ 성공! ${data.length}개의 데이터를 찾았습니다.`;
+                data.forEach(card => {
+                    const li = document.createElement('li');
+                    li.innerText = `${card.name} (세트: ${card.set_name})`;
+                    listElement.appendChild(li);
+                });
+            } else {
+                statusElement.innerText = "⚠️ 연결은 됐으나 테이블에 데이터가 없습니다.";
             }
-
-            // 2. 데이터가 있다면 무조건 화면에 뿌리기
-            status.innerHTML = `✅ 연결 성공! 데이터 ${data.length}개를 불러왔습니다.`;
-            debug.innerText = `HTTP 상태 코드: ${httpStatus}`;
-
-            data.forEach(card => {
-                const img = card.image_url_small || "https://via.placeholder.com/100x150?text=No+Image";
-                display.innerHTML += `
-                    <div class="card-item">
-                        <img src="${img}">
-                        <p style="font-size:10px; text-align:center;">${card.name || '이름 없음'}</p>
-                    </div>
-                `;
-            });
-
-        } catch (e) {
-            status.innerHTML = `<span class="error">❌ 치명적 오류: ${e.message}</span>`;
         }
-    }
 
-    window.onload = checkData;
-</script>
+        testConnection();
+    </script>
 </body>
 </html>
