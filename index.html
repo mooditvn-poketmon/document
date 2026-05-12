@@ -7,7 +7,57 @@
 </head>
 <body>
     <h1>📡 DB 실시간 연결 확인</h1>
+    <div id="status">데이터를 불러오는 중...</<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>DB 연결 최종 확인</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>📡 DB 실시간 연결 확인</h1>
     <div id="status">데이터를 불러오는 중...</div>
+    <ul id="test-list" style="font-size: 1.2rem; line-height: 1.6;"></ul>
+
+    <script>
+        // 공백이 포함되지 않도록 주의해서 설정했습니다.
+        const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function fetchTestData() {
+            const statusBox = document.getElementById('status');
+            const list = document.getElementById('test-list');
+
+            // 1. master_cards 테이블에서 상위 5개 레코드의 ID와 이름만 가져오기
+            const { data, error } = await supabase
+                .from('master_cards')
+                .select('id, name')
+                .limit(5);
+
+            if (error) {
+                console.error("연결 에러:", error);
+                statusBox.innerHTML = `<b style="color:red;">❌ 연결 실패: ${error.message}</b>`;
+                return;
+            }
+
+            if (data && data.length > 0) {
+                statusBox.innerHTML = `<b style="color:green;">✅ 연결 성공! DB에 데이터가 있습니다.</b>`;
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerText = `🆔 ID: ${item.id} | 🃏 이름: ${item.name}`;
+                    list.appendChild(li);
+                });
+            } else {
+                statusBox.innerHTML = `<b>⚠️ 연결은 됐으나 테이블이 비어있습니다. (파이썬 업로드 재확인 필요)</b>`;
+            }
+        }
+
+        fetchTestData();
+    </script>
+</body>
+</html>div>
     <ul id="test-list" style="font-size: 1.2rem; line-height: 1.6;"></ul>
 
     <script>
