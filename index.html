@@ -3,114 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT Pokemon TCG Premium Dex</title>
+    <title>MOODIT Pokemon TCG Database</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 다크 모드 배경 설정 */
-        body { 
-            font-family: 'Pretendard', -apple-system, sans-serif; 
-            background-color: #0f1215; /* 깊은 블랙 배경 */
-            color: #e0e0e0; 
-            margin: 0; 
-            padding: 40px 20px; 
+        :root {
+            --primary-silver: #bdc3c7;
+            --dark-bg: #0f1215;
+            --card-bg: #1a1d21;
+            --accent-glow: rgba(192, 192, 192, 0.2);
         }
 
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: var(--dark-bg); 
+            color: #e0e0e0; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        /* 상단 네비게이션 메뉴 */
+        nav {
+            background: rgba(20, 24, 28, 0.95);
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .category-menu {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .menu-item {
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 30px;
+            background: #222;
+            border: 1px solid #444;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #bbb;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: var(--primary-silver);
+            color: #000;
+            border-color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        header { padding: 40px 20px; text-align: center; }
         h1 { 
-            text-align: center; 
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            background: linear-gradient(to right, #bdc3c7, #2c3e50); /* 실버 텍스트 그라데이션 */
+            font-size: 2.2rem; 
+            background: linear-gradient(to right, #fff, #888);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 50px;
+            margin: 0;
         }
-        
+
         /* 카드 그리드 */
         .dex-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 30px;
+            gap: 25px;
             max-width: 1300px;
             margin: 0 auto;
+            padding: 0 20px 50px;
         }
 
-        /* 실버 메탈릭 카드 스타일 */
+        /* 카드 스타일 */
         .card-item {
-            background: linear-gradient(145deg, #23272b, #1a1d21); /* 다크 그레이 베이스 */
-            border: 1px solid rgba(192, 192, 192, 0.2); /* 은은한 실버 테두리 */
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px;
+            transition: all 0.4s ease;
             text-align: center;
         }
 
-        /* 호버 시 실버 광택 효과 */
-        .card-item:hover { 
-            transform: translateY(-10px);
-            border-color: rgba(192, 192, 192, 0.8);
-            box-shadow: 0 15px 30px rgba(192, 192, 192, 0.15);
+        .card-item:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-silver);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
 
-        /* 카드 이미지 테두리 효과 */
-        .card-item img { 
-            width: 100%; 
-            border-radius: 10px; 
-            margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
+        .card-item img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 12px;
         }
 
-        /* 텍스트 스타일 */
-        .card-name { 
-            font-weight: 700; 
-            font-size: 1.1rem; 
-            color: #ffffff; 
-            margin: 10px 0 5px 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        .card-name { font-weight: 600; color: #fff; margin-bottom: 8px; font-size: 1rem; }
+        .card-set-badge {
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 5px;
+            color: #aaa;
         }
 
-        .card-set { 
-            display: inline-block;
-            font-size: 0.75rem; 
-            color: #a0a0a0; 
-            border: 1px solid #444;
-            padding: 3px 10px; 
-            border-radius: 20px;
-            background: rgba(255,255,255,0.05);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* 로딩 애니메이션 */
-        #loading { 
-            text-align: center; 
-            font-size: 1.2rem; 
-            color: #888;
-            padding: 100px; 
-        }
-
-        /* 카드 장식용 실버 라인 */
-        .card-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
-            transform: skewX(-25deg);
-            transition: 0.5s;
-        }
-        .card-item:hover::before {
-            left: 150%;
-        }
+        #loading { text-align: center; padding: 100px; color: #666; }
     </style>
 </head>
 <body>
 
-    <h1>POKÉDEX PREMIUM</h1>
-    <div id="loading">DB에서 데이터를 동기화 중입니다...</div>
+    <nav>
+        <div class="category-menu" id="category-menu">
+            <div class="menu-item active" onclick="filterData('ALL', this)">ALL</div>
+            </div>
+    </nav>
+
+    <header>
+        <h1 id="view-title">POKÉMON DATABASE</h1>
+    </header>
+
+    <div id="loading">데이터를 동기화 중입니다...</div>
     <div class="dex-container" id="dex-container"></div>
 
     <script>
@@ -118,39 +134,75 @@
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
         const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function loadDex() {
-            const container = document.getElementById('dex-container');
-            const loading = document.getElementById('loading');
+        let allCards = [];
 
+        async function init() {
+            // 1. 전체 데이터 로드 (시리즈 구분을 위해)
             const { data, error } = await client
                 .from('master_cards')
-                .select('name, set_name, image_url_small')
-                .order('name', { ascending: true })
-                .limit(40); // 40개 먼저 로드
+                .select('name, series, set_name, image_url_small')
+                .order('name', { ascending: true });
 
             if (error) {
-                loading.innerText = "❌ 로드 실패: " + error.message;
+                document.getElementById('loading').innerText = "데이터 로드 실패";
                 return;
             }
 
-            loading.style.display = 'none';
+            allCards = data;
+            
+            // 2. 시리즈 메뉴 생성
+            createMenu();
+            // 3. 전체 카드 렌더링
+            renderCards(allCards);
+            document.getElementById('loading').style.display = 'none';
+        }
 
-            data.forEach(card => {
+        function createMenu() {
+            const menu = document.getElementById('category-menu');
+            // 중복 제거된 시리즈 목록 추출
+            const seriesList = [...new Set(allCards.map(c => c.series))].filter(s => s);
+            
+            seriesList.forEach(series => {
+                const item = document.createElement('div');
+                item.className = 'menu-item';
+                item.innerText = series;
+                item.onclick = (e) => filterData(series, e.target);
+                menu.appendChild(item);
+            });
+        }
+
+        function filterData(series, element) {
+            // 메뉴 활성화 상태 변경
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            element.classList.add('active');
+
+            // 제목 변경
+            document.getElementById('view-title').innerText = series === 'ALL' ? 'POKÉMON DATABASE' : series;
+
+            // 데이터 필터링
+            const filtered = series === 'ALL' ? allCards : allCards.filter(c => c.series === series);
+            renderCards(filtered);
+        }
+
+        function renderCards(cards) {
+            const container = document.getElementById('dex-container');
+            container.innerHTML = ''; // 기존 카드 제거
+
+            cards.forEach(card => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-item';
-                
                 const imgSrc = card.image_url_small || 'https://via.placeholder.com/250x350/1a1d21/ffffff?text=No+Image';
                 
                 cardDiv.innerHTML = `
-                    <img src="${imgSrc}" alt="${card.name}">
+                    <img src="${imgSrc}" loading="lazy">
                     <div class="card-name">${card.name}</div>
-                    <span class="card-set">${card.set_name}</span>
+                    <div class="card-set-badge">${card.set_name}</div>
                 `;
                 container.appendChild(cardDiv);
             });
         }
 
-        loadDex();
+        init();
     </script>
 </body>
 </html>
