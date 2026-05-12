@@ -2,97 +2,68 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT Pokedex Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOODIT Pokedex Fix</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #121212; color: white; font-family: sans-serif; margin: 0; padding: 15px; }
-        #stats { font-size: 1.1rem; padding: 10px; border-bottom: 1px solid #333; margin-bottom: 15px; color: #ffd700; }
-        .series-section { background: #222; margin-bottom: 10px; border-radius: 8px; overflow: hidden; border: 1px solid #444; }
-        .series-title { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; background: #2a2a2a; }
-        .pokedex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px; display: none; }
-        .card-wrapper { aspect-ratio: 2/3; background: #333; border-radius: 4px; overflow: hidden; }
-        img { width: 100%; height: 100%; object-fit: cover; }
-    </style>
+        body { background: #121212; color: #eee; font-family: sans-serif; padding: 20px; }
+        #status { padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #222; border: 1px solid #444; }
+        .card-item { display: inline-block; width: 100px; margin: 5px; }
+        img { width: 100%; border-radius: 4px; }
+        .error { color: #ff6b6b; font-weight: bold; }
+    </small></style>
 </head>
 <body>
-
-    <div id="stats">📡 필드 데이터 확인 중...</div>
-    <div id="container"></div>
+    <div id="status">📡 시스템 가동 중...</div>
+    <div id="debug-info" style="font-size: 12px; color: #888; margin-bottom: 20px;"></div>
+    <div id="display-area"></div>
 
 <script>
     const URL = "https://piiyexmbntafddnlszmm.supabase.co";
     const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
     const sb = supabase.createClient(URL, KEY);
 
-    async function init() {
-        const stats = document.getElementById('stats');
-        const container = document.getElementById('container');
+    async function checkData() {
+        const status = document.getElementById('status');
+        const debug = document.getElementById('debug-info');
+        const display = document.getElementById('display-area');
 
         try {
-            // [테스트] 값이 확실히 있는 supertype 필드를 가져옵니다.
-            const { data, error } = await sb
-                .from('master_cards')
-                .select('supertype')
-                .limit(1000); // 우선 1000개만 테스트
+            // 1. 단순 연결 테스트 (1개만 가져오기)
+            debug.innerText = "Supabase 서버에 응답 요청 중...";
+            const { data, error, status: httpStatus } = await sb.from('master_cards').select('name, image_url_small').limit(20);
 
             if (error) {
-                stats.innerText = "❌ 에러: " + error.message;
+                status.innerHTML = `<span class="error">❌ 에러 발생: ${error.message} (코드: ${error.code})</span>`;
+                debug.innerText = "RLS 정책이나 테이블 이름을 다시 확인하세요.";
                 return;
             }
 
-            // 중복 제거
-            const types = [...new Set(data.map(i => i.supertype))].filter(Boolean);
-            
-            if (types.length === 0) {
-                stats.innerText = "⚠️ 모든 필드가 비어있습니다. DB를 확인해주세요.";
+            if (!data || data.length === 0) {
+                status.innerHTML = "⚠️ 연결은 됐으나 테이블이 비어있습니다 (0 rows).";
                 return;
             }
 
-            stats.innerText = `✅ 확인 완료! (${types.join(', ')}) 분류 발견`;
+            // 2. 데이터가 있다면 무조건 화면에 뿌리기
+            status.innerHTML = `✅ 연결 성공! 데이터 ${data.length}개를 불러왔습니다.`;
+            debug.innerText = `HTTP 상태 코드: ${httpStatus}`;
 
-            types.forEach(typeName => {
-                const div = document.createElement('div');
-                div.className = 'series-section';
-                div.innerHTML = `
-                    <div class="series-title" onclick="toggleView('${typeName}')">
-                        <span>📁 ${typeName} (확인용)</span>
-                        <span>▼</span>
+            data.forEach(card => {
+                const img = card.image_url_small || "https://via.placeholder.com/100x150?text=No+Image";
+                display.innerHTML += `
+                    <div class="card-item">
+                        <img src="${img}">
+                        <p style="font-size:10px; text-align:center;">${card.name || '이름 없음'}</p>
                     </div>
-                    <div class="pokedex-grid" id="grid-${typeName}"></div>
                 `;
-                container.appendChild(div);
             });
 
         } catch (e) {
-            stats.innerText = "❌ 오류: " + e.message;
+            status.innerHTML = `<span class="error">❌ 치명적 오류: ${e.message}</span>`;
         }
     }
 
-    async function toggleView(typeName) {
-        const grid = document.getElementById(`grid-${typeName}`);
-        if (grid.style.display === "grid") { grid.style.display = "none"; return; }
-        
-        grid.style.display = "grid";
-        if (grid.innerHTML !== "") return;
-
-        grid.innerHTML = "소환 중...";
-
-        const { data } = await sb
-            .from('master_cards')
-            .select('image_url_small')
-            .eq('supertype', typeName)
-            .limit(50); // 테스트용으로 50개만
-
-        if (data) {
-            grid.innerHTML = "";
-            data.forEach(c => {
-                grid.innerHTML += `<div class="card-wrapper"><img src="${c.image_url_small}"></div>`;
-            });
-        }
-    }
-
-    window.onload = init;
+    window.onload = checkData;
 </script>
 </body>
 </html>
