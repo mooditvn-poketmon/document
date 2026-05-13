@@ -106,7 +106,7 @@
         .card-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0; }
         .card-set-name { font-size: 0.85rem; color: var(--text-muted); }
 
-        /* 상세 모달 (배경 완전 차단) */
+        /* 상세 모달 */
         .modal {
             display: none;
             position: fixed;
@@ -214,8 +214,10 @@
     let allLoadedCards = [];
 
     async function init() {
-        const { data: seriesData } = await client.from('master_cards').select('series').not('series', 'is', null);
-        const uniqueSeries = [...new Set(seriesData.map(s => s.series))].sort();
+        // DB의 set_series 컬럼에서 유니크한 시리즈 목록 추출
+        const { data: seriesData } = await client.from('master_cards').select('set_series').not('set_series', 'is', null);
+        const uniqueSeries = [...new Set(seriesData.map(s => s.set_series))].filter(Boolean).sort();
+        
         const menu = document.getElementById('series-menu');
         uniqueSeries.forEach(s => {
             const tab = document.createElement('div');
@@ -251,7 +253,7 @@
             .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
 
         if (currentSeries !== 'ALL') {
-            query = query.eq('series', currentSeries);
+            query = query.eq('set_series', currentSeries);
         }
 
         const { data, error } = await query;
@@ -276,8 +278,9 @@
             const div = document.createElement('div');
             div.className = 'card-item';
             div.onclick = () => openModal(idx);
+            
             div.innerHTML = `
-                <img src="${card.image_url_large}" loading="lazy">
+                <img src="${card.image_url}" loading="lazy" onerror="this.src='https://via.placeholder.com/110x154?text=No+Image'">
                 <div class="card-info-summary">
                     <div class="card-name">${card.name}</div>
                     <div class="card-set-name">${card.set_name}</div>
@@ -287,9 +290,8 @@
         });
     }
 
-    // 무한 스크롤 감지
     window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
             fetchNextPage();
         }
     });
@@ -297,25 +299,44 @@
     function openModal(idx) {
         const card = allLoadedCards[idx];
         document.getElementById('detail-scroll-body').scrollTop = 0;
-        document.getElementById('detail-img').src = card.image_url_large;
+        document.getElementById('detail-img').src = card.image_url;
         document.getElementById('detail-name').innerText = card.name;
-        document.getElementById('detail-set').innerText = `${card.set_name} / ${card.set_id.toUpperCase()}`;
+        document.getElementById('detail-set').innerText = `${card.set_name} / ${card.set_id?.toUpperCase()}`;
         
         let html = '';
-        html += `<div class="section-card"><div class="section-header">Stats</div><div style="font-weight:bold; color:var(--accent-yellow);">${card.hp ? card.hp + ' HP' : ''} ${card.types ? ' / ' + card.types.join(', ') : ''}</div></div>`;
-        if (card.abilities) {
-            html += `<div class="section-card"><div class="section-header">Abilities</div>`;
-            card.abilities.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name}</div><div class="move-desc">${a.text}</div></div>`);
-            html += `</div>`;
-        }
-        if (card.attacks) {
+        
+        // Stats
+        const types = Array.isArray(card.types) ? card.types.join(', ') : (card.types || '');
+        html += `
+            <div class="section-card">
+                <div class="section-header">Stats</div>
+                <div style="font-weight:bold; color:var(--accent-yellow);">
+                    ${card.hp ? card.hp + ' HP' : ''} ${types ? ' / ' + types : ''}
+                </div>
+            </div>`;
+
+        // Attacks
+        if (card.attacks && Array.isArray(card.attacks)) {
             html += `<div class="section-card"><div class="section-header">Attacks</div>`;
-            card.attacks.forEach(a => html += `<div class="move-item"><div class="move-name">${a.name} ${a.damage ? `(${a.damage})` : ''}</div><div class="move-desc">${a.text || ''}</div></div>`);
+            card.attacks.forEach(a => {
+                html += `
+                    <div class="move-item">
+                        <div class="move-name">${a.name} ${a.damage ? `(${a.damage})` : ''}</div>
+                        <div class="move-desc">${a.text || ''}</div>
+                    </div>`;
+            });
             html += `</div>`;
         }
+
+        // Flavor Text
         if (card.flavor_text) {
-            html += `<div class="section-card"><div class="section-header">Pokedex</div><div style="font-style:italic; color:#aaa; font-size:0.9rem;">${card.flavor_text}</div></div>`;
+            html += `
+                <div class="section-card">
+                    <div class="section-header">Pokedex</div>
+                    <div style="font-style:italic; color:#aaa; font-size:0.9rem;">${card.flavor_text}</div>
+                </div>`;
         }
+
         document.getElementById('detail-content-target').innerHTML = html;
         document.getElementById('detail-modal').classList.add('open');
         document.body.style.overflow = 'hidden';
