@@ -187,24 +187,34 @@ let isLoading = false;
 
 async function init() {
 
-    const { data } = await client
+    const { data, error } = await client
         .from("cards")
-        .select("series")
-        .not("series","is",null);
+        .select("series");
 
-    const list = [...new Set(data.map(x => x.series))].filter(Boolean);
+    if (error || !data) {
+        console.log("series load error:", error);
+        return;
+    }
+
+    // 안전하게 정리
+    const list = [...new Set(
+        data
+            .map(x => x.series)
+            .filter(v => v && v !== null && v !== "")
+    )].sort();
 
     const menu = document.getElementById("series-menu");
 
-    list.forEach(s => {
-        const d = document.createElement("div");
-        d.className = "series-tab";
-        d.innerText = s;
-        d.onclick = e => changeSeries(s, e.target);
-        menu.appendChild(d);
-    });
+    // 기존 ALL 제외하고 중복 방지
+    menu.innerHTML = `<div class="series-tab active" onclick="changeSeries('ALL', this)">ALL</div>`;
 
-    load();
+    list.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "series-tab";
+        div.innerText = s;
+        div.onclick = e => changeSeries(s, e.target);
+        menu.appendChild(div);
+    });
 }
 
 function changeSeries(s, el) {
