@@ -96,10 +96,10 @@
         .modal {
             display: none;
             position: fixed;
+            z-index: 9999;
             left: 0; top: 0;
             width: 100vw; height: 100vh;
-            background: var(--dark-void);
-            z-index: 9999;
+            background-color: var(--dark-void);
         }
 
         .modal.open { display: flex; flex-direction: column; }
@@ -157,7 +157,6 @@
 </header>
 
 <div class="dex-container" id="dex-container"></div>
-<div id="loading-indicator">로딩중...</div>
 
 <div id="detail-modal" class="modal">
     <div class="modal-container">
@@ -185,50 +184,46 @@ let currentPage = 0;
 const itemsPerPage = 50;
 let allCards = [];
 let isLoading = false;
-let hasMore = true;
 
 async function init() {
-    const { data } = await client
-        .from('cards')
-        .select('series')
-        .not('series','is',null);
 
-    const seriesList = [...new Set(data.map(d => d.series))].filter(Boolean);
+    const { data } = await client
+        .from("cards")
+        .select("series")
+        .not("series","is",null);
+
+    const list = [...new Set(data.map(x => x.series))].filter(Boolean);
 
     const menu = document.getElementById("series-menu");
 
-    seriesList.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "series-tab";
-        div.innerText = s;
-        div.onclick = e => changeSeries(s, e.target);
-        menu.appendChild(div);
+    list.forEach(s => {
+        const d = document.createElement("div");
+        d.className = "series-tab";
+        d.innerText = s;
+        d.onclick = e => changeSeries(s, e.target);
+        menu.appendChild(d);
     });
 
-    fetchNext();
+    load();
 }
 
-function changeSeries(series, el) {
+function changeSeries(s, el) {
     document.querySelectorAll(".series-tab").forEach(t => t.classList.remove("active"));
     el.classList.add("active");
 
-    currentSeries = series;
+    currentSeries = s;
     currentPage = 0;
-    hasMore = true;
     allCards = [];
-
     document.getElementById("dex-container").innerHTML = "";
-    fetchNext();
+    load();
 }
 
-async function fetchNext() {
-    if (isLoading || !hasMore) return;
-    isLoading = true;
+async function load() {
 
     let q = client.from("cards")
         .select("*")
-        .order("card_name", { ascending: true })
-        .range(currentPage * itemsPerPage, (currentPage+1)*itemsPerPage-1);
+        .order("name", { ascending: true })
+        .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
 
     if (currentSeries !== "ALL") {
         q = q.eq("series", currentSeries);
@@ -236,34 +231,32 @@ async function fetchNext() {
 
     const { data } = await q;
 
-    if (!data || data.length === 0) {
-        hasMore = false;
-        return;
-    }
+    if (!data || data.length === 0) return;
 
     allCards = allCards.concat(data);
+
     render(data);
     currentPage++;
-
-    isLoading = false;
 }
 
-function render(cards) {
+function render(list) {
+
     const box = document.getElementById("dex-container");
 
-    cards.forEach(card => {
-        const idx = allCards.findIndex(c => c.id === card.id);
+    list.forEach(c => {
+
+        const idx = allCards.findIndex(x => x.id === c.id);
 
         const div = document.createElement("div");
         div.className = "card-item";
-        div.onclick = () => openModal(idx);
+        div.onclick = () => open(idx);
 
         div.innerHTML = `
-            <img src="${card.image_large || ''}" 
+            <img src="${c.image_small || ''}"
                  onerror="this.src='https://via.placeholder.com/110x154'">
             <div>
-                <div class="card-name">${card.card_name}</div>
-                <div class="card-set-name">${card.set_name || ''}</div>
+                <div class="card-name">${c.name}</div>
+                <div class="card-set-name">${c.set_name || ''}</div>
             </div>
         `;
 
@@ -271,12 +264,15 @@ function render(cards) {
     });
 }
 
-function openModal(idx) {
-    const c = allCards[idx];
+function open(i) {
 
-    document.getElementById("detail-img").src = c.image_large;
-    document.getElementById("detail-name").innerText = c.card_name;
-    document.getElementById("detail-set").innerText = `${c.set_name || ''} / ${c.series || ''}`;
+    const c = allCards[i];
+
+    document.getElementById("detail-modal").classList.add("open");
+
+    document.getElementById("detail-img").src = c.image_small;
+    document.getElementById("detail-name").innerText = c.name;
+    document.getElementById("detail-set").innerText = `${c.set_name} / ${c.series}`;
 
     let html = "";
 
@@ -284,41 +280,25 @@ function openModal(idx) {
         <div class="section-card">
             <div class="section-header">INFO</div>
             HP: ${c.hp || '-'}<br>
-            TYPE: ${(c.types || []).join(", ")}<br>
-            SUPERTYPE: ${c.supertype || ''}
+            TYPE: ${(c.card_types || []).join(", ")}<br>
+            SUPER: ${c.supertype || ''}
         </div>
     `;
-
-    if (c.subtypes?.length) {
-        html += `
-            <div class="section-card">
-                <div class="section-header">SUBTYPES</div>
-                ${(c.subtypes || []).join(", ")}
-            </div>
-        `;
-    }
 
     if (c.attacks?.length) {
         html += `<div class="section-card"><div class="section-header">ATTACKS</div>`;
         c.attacks.forEach(a => {
-            html += `<div><b>${a.name}</b> ${a.damage || ''}<br>${a.text || ''}</div><br>`;
+            html += `<div><b>${a.name}</b> ${a.damage || ''}</div>`;
         });
         html += `</div>`;
     }
 
     document.getElementById("detail-content").innerHTML = html;
-    document.getElementById("detail-modal").classList.add("open");
 }
 
 function closeModal() {
     document.getElementById("detail-modal").classList.remove("open");
 }
-
-window.addEventListener("scroll", () => {
-    if (window.innerHeight + window.scrollY > document.body.offsetHeight - 600) {
-        fetchNext();
-    }
-});
 
 init();
 </script>
