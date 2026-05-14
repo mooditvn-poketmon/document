@@ -3,45 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT TCG MASTER</title>
+    <title>MOODIT TCG ARCHIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --border: rgba(255,255,255,0.1); }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
-        .header { position: sticky; top: 0; z-index: 1000; background: #0b0d0f; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 10px; gap: 10px; scrollbar-width: none; }
-        .tab { padding: 8px 15px; background: #222; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 14px; }
-        .tab.active { background: #fff; color: #000; font-weight: bold; }
-        .set-icon { flex-shrink: 0; width: 70px; text-align: center; }
-        .set-icon img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid var(--border); }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
-        .card { background: #111; border-radius: 5px; overflow: hidden; aspect-ratio: 2.5/3.5; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        /* 상세페이지 */
-        #detail { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; flex-direction: column; }
-        #detail.active { display: flex; }
-        .nav-btns { display: flex; justify-content: center; gap: 40px; padding: 30px; }
-        .btn { width: 60px; height: 60px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        :root {
+            --bg: #0b0d0f; --panel: #16181c; --accent: #f1c40f;
+            --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; overflow-x: hidden; }
+
+        /* 상단 고정 헤더 */
+        .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11, 13, 15, 0.98); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); }
+        
+        /* 시리즈 탭 */
+        .series-bar { display: flex; overflow-x: auto; padding: 15px 15px 5px; gap: 10px; scrollbar-width: none; }
+        .series-bar::-webkit-scrollbar { display: none; }
+        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .series-tab.active { background: #fff; color: #000; font-weight: 800; }
+
+        /* 세트 수평 슬라이더 */
+        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; min-height: 110px; }
+        .set-slider::-webkit-scrollbar { display: none; }
+        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; }
+        .set-icon-card img { width: 65px; height: 65px; object-fit: contain; background: #000; border-radius: 15px; padding: 8px; border: 1px solid var(--border); transition: 0.3s; }
+        .set-icon-card.all-btn img { background: var(--accent); display: flex; align-items: center; justify-content: center; }
+        .set-icon-card span { display: block; font-size: 0.65rem; color: #fff; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* 메인 카드 영역 */
+        .main-view { padding: 15px; min-height: 100vh; }
+        .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 10px; }
+        .section-title img { height: 22px; object-fit: contain; }
+        
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 40px; }
+        .card-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #111; aspect-ratio: 250/350; transition: 0.2s; }
+        .card-wrap:active { transform: scale(0.95); }
+        .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 10; }
+
+        /* 상세 페이지 모달 */
+        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; overflow-y: auto; animation: fadeInUp 0.3s ease; }
+        #detail-view.open { display: flex; }
+        .detail-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); }
+        .detail-body { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
+        .big-card-img { width: 100%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 30px; }
+        .info-panel { width: 100%; max-width: 450px; }
+        .attack-box { background: #1a1d21; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .atk-header { display: flex; justify-content: space-between; font-weight: 800; color: #fff; }
+        
+        /* 하단 컨트롤 */
+        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; padding-bottom: 40px; }
+        .nav-btn { background: #fff; color: #000; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="header">
+<div class="header-fixed">
     <div class="series-bar" id="series-bar"></div>
     <div class="set-slider" id="set-slider"></div>
 </div>
 
-<div id="content-area"></div>
+<div class="main-view" id="content-area">
+    <div style="text-align:center; padding-top:100px; color:var(--dim);">데이터를 불러오고 있습니다...</div>
+</div>
 
-<div id="detail">
-    <div style="padding: 20px; text-align: right; font-size: 30px;" onclick="closeDetail()">&times;</div>
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img id="detail-img" style="width: 80%; max-width: 350px; border-radius: 15px;">
-        <h2 id="detail-name"></h2>
+<div id="detail-view">
+    <div class="detail-header">
+        <span id="detail-count" style="font-size: 0.9rem; font-weight: 800; color: var(--accent);"></span>
+        <span onclick="closeDetail()" style="font-size: 35px; cursor: pointer;">&times;</span>
     </div>
-    <div class="nav-btns">
-        <div class="btn" onclick="prev()">◀</div>
-        <div class="btn" onclick="next()">▶</div>
+    <div class="detail-body">
+        <img id="detail-img" class="big-card-img" src="">
+        <div class="info-panel">
+            <h2 id="detail-name" style="font-size: 1.8rem; margin: 0 0 10px; font-weight: 900;"></h2>
+            <div id="detail-tags" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px;"></div>
+            <div id="detail-attacks"></div>
+        </div>
+    </div>
+    <div class="footer-nav">
+        <div class="nav-btn" onclick="prevCard()">◀</div>
+        <div class="nav-btn" onclick="nextCard()">▶</div>
     </div>
 </div>
 
@@ -50,97 +93,152 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
     const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    let cards = [];
-    let curIdx = 0;
+    let masterCards = [];
+    let currentIdx = 0;
 
     async function init() {
         const { data: series } = await client.from('series').select('*').order('series');
         const bar = document.getElementById('series-bar');
         
+        // 1. Series [ALL] 버튼
         const allTab = document.createElement('div');
-        allTab.className = 'tab active';
+        allTab.className = 'series-tab active';
         allTab.innerText = 'ALL';
-        allTab.onclick = () => loadData(null);
+        allTab.onclick = (e) => {
+            document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
+            allTab.classList.add('active');
+            loadContent(null);
+        };
         bar.appendChild(allTab);
 
         series.forEach(s => {
-            const t = document.createElement('div');
-            t.className = 'tab';
-            t.innerText = s.series;
-            t.onclick = () => loadData(s.series);
-            bar.appendChild(t);
+            const div = document.createElement('div');
+            div.className = 'series-tab';
+            div.innerText = s.series;
+            div.onclick = (e) => {
+                document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
+                div.classList.add('active');
+                loadContent(s.series);
+            };
+            bar.appendChild(div);
         });
-        loadData(null);
+
+        loadContent(null);
     }
 
-    async function loadData(seriesName) {
+    async function loadContent(seriesName) {
         const area = document.getElementById('content-area');
-        area.innerHTML = '<div style="text-align:center; padding:50px;">데이터 로딩 중...</div>';
+        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">카드를 불러오는 중...</div>';
+        
+        // 2. 세트 리스트 로드
+        let sQuery = client.from('sets').select('*').order('releaseDate', {ascending: false});
+        if(seriesName) sQuery = sQuery.eq('series', seriesName);
+        const { data: sets } = await sQuery;
 
-        // 1. 세트 가져오기
-        let sQ = client.from('sets').select('*').order('releaseDate', {ascending: false});
-        if(seriesName) sQ = sQ.eq('series', seriesName);
-        const { data: sets } = await sQ;
-
-        // 2. 세트 슬라이더
+        // 3. 세트 슬라이더(2행) 업데이트
         const slider = document.getElementById('set-slider');
         slider.innerHTML = '';
+        
+        const allSetBtn = document.createElement('div');
+        allSetBtn.className = 'set-icon-card all-btn';
+        allSetBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/000000/grid.png"><span>ALL</span>`;
+        allSetBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        slider.appendChild(allSetBtn);
+
         sets.forEach(s => {
             const div = document.createElement('div');
-            div.className = 'set-icon';
-            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}">`;
-            div.onclick = () => document.getElementById('sec-'+s.id)?.scrollIntoView({behavior:'smooth'});
+            div.className = 'set-icon-card';
+            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
+            div.onclick = () => {
+                const target = document.getElementById('sec-' + s.id);
+                if(target) {
+                    const headerHeight = 180;
+                    window.scrollTo({ top: target.offsetTop - headerHeight, behavior: 'smooth' });
+                }
+            };
             slider.appendChild(div);
         });
 
-        // 3. 카드 가져오기 (가장 중요한 부분)
-        // 쿼리 단순화: 필터링 없이 일단 긁어본 후 클라이언트에서 매칭
-        const sIds = sets.map(s => s.id);
-        const { data: cData, error } = await client.from('cards').select('*').in('set_id', sIds);
+        // 4. 카드 데이터 로드 (분할 쿼리로 안정성 확보)
+        let loadedCards = [];
+        const setIds = sets.map(s => s.id);
         
-        if(error || !cData || cData.length === 0) {
-            area.innerHTML = `<div style="color:red; padding:20px;">카드를 가져오지 못했습니다. 에러: ${error?.message || '데이터 없음'}</div>`;
+        for (let i = 0; i < setIds.length; i += 30) {
+            const chunk = setIds.slice(i, i + 30);
+            const { data: cData } = await client.from('cards').select('*').in('set_id', chunk).order('number', {ascending: true});
+            if(cData) loadedCards = [...loadedCards, ...cData];
+        }
+
+        masterCards = loadedCards;
+        area.innerHTML = '';
+
+        if(masterCards.length === 0) {
+            area.innerHTML = '<div style="text-align:center; padding-top:100px;">해당 시리즈에 카드가 없습니다.</div>';
             return;
         }
 
-        cards = cData.sort((a,b) => a.number - b.number);
-        area.innerHTML = '';
-
-        // 4. 그리기
+        // 5. 세트별 섹션 및 카드 그리드 생성
         sets.forEach(set => {
-            const sCards = cards.filter(c => c.set_id == set.id);
-            if(sCards.length === 0) return;
+            const setCards = masterCards.filter(c => c.set_id == set.id);
+            if(setCards.length === 0) return;
 
-            const sec = document.createElement('div');
-            sec.id = 'sec-' + set.id;
-            sec.innerHTML = `<div style="padding:15px; font-weight:bold; border-bottom:1px solid #222;">${set.name}</div>`;
+            const section = document.createElement('div');
+            section.id = 'sec-' + set.id;
+            section.innerHTML = `<div class="section-title"><img src="${set.image_symbol || ''}">${set.name} (${setCards.length})</div>`;
+            
             const grid = document.createElement('div');
             grid.className = 'card-grid';
             
-            sCards.forEach(card => {
-                const idx = cards.findIndex(c => c.id === card.id);
+            setCards.forEach(card => {
+                const globalIdx = masterCards.findIndex(c => c.id === card.id);
                 const wrap = document.createElement('div');
-                wrap.className = 'card';
-                wrap.onclick = () => open(idx);
-                wrap.innerHTML = `<img src="${card.image_small}" loading="lazy">`;
+                wrap.className = 'card-wrap';
+                wrap.onclick = () => openDetail(globalIdx);
+                wrap.innerHTML = `<div class="card-badge">#${card.number}</div><img src="${card.image_small}" loading="lazy">`;
                 grid.appendChild(wrap);
             });
-            sec.appendChild(grid);
-            area.appendChild(sec);
+            section.appendChild(grid);
+            area.appendChild(section);
         });
     }
 
-    function open(i) {
-        curIdx = i;
-        document.getElementById('detail-img').src = cards[curIdx].image_large;
-        document.getElementById('detail-name').innerText = cards[curIdx].name;
-        document.getElementById('detail').classList.add('active');
+    function openDetail(idx) {
+        currentIdx = idx;
+        const card = masterCards[currentIdx];
+        if(!card) return;
+
+        document.getElementById('detail-img').src = card.image_large;
+        document.getElementById('detail-name').innerText = card.name;
+        document.getElementById('detail-count').innerText = `CARD ${currentIdx + 1} / ${masterCards.length}`;
+        
+        document.getElementById('detail-tags').innerHTML = `
+            <div style="padding:5px 12px; background:#222; border-radius:6px; color:var(--accent); font-size:0.8rem; border:1px solid var(--border);">${card.supertype}</div>
+            <div style="padding:5px 12px; background:#222; border-radius:6px; color:var(--accent); font-size:0.8rem; border:1px solid var(--border);">${card.hp || 'N/A'} HP</div>
+            <div style="padding:5px 12px; background:#222; border-radius:6px; color:var(--accent); font-size:0.8rem; border:1px solid var(--border);">${card.rarity || 'Common'}</div>
+        `;
+
+        let atkHtml = '';
+        if(card.attacks) {
+            card.attacks.forEach(a => {
+                atkHtml += `
+                <div class="attack-box">
+                    <div class="atk-header"><span>${a.name}</span><span>${a.damage || ''}</span></div>
+                    <div style="font-size:0.85rem; color:var(--dim); margin-top:5px; line-height:1.4;">${a.text || ''}</div>
+                </div>`;
+            });
+        }
+        document.getElementById('detail-attacks').innerHTML = atkHtml;
+        document.getElementById('detail-view').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeDetail() { document.getElementById('detail').classList.remove('active'); document.body.style.overflow = ''; }
-    function next() { if(curIdx < cards.length -1) open(curIdx + 1); }
-    function prev() { if(curIdx > 0) open(curIdx - 1); }
+    function closeDetail() {
+        document.getElementById('detail-view').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function nextCard() { if(currentIdx < masterCards.length - 1) openDetail(currentIdx + 1); }
+    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
 
     init();
 </script>
