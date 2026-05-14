@@ -139,4 +139,122 @@
             div.onclick = () => {
                 document.querySelectorAll('.set-icon-card').forEach(c => c.classList.remove('active'));
                 div.classList.add('active');
-                document.getElementById('sec-' +
+                document.getElementById('sec-' + s.id)?.scrollIntoView({behavior:'smooth', block:'center'});
+            };
+            slider.appendChild(div);
+        });
+    }
+
+    // 4. [수정 핵심] 정확하게 영인님 DB의 set_id 와 cards 테이블을 매핑하여 하단 출력
+    async function fetchAndRenderCards(sets) {
+        const area = document.getElementById('content-area');
+        const setIds = sets.map(s => s.id);
+        
+        // 멍청한 유추 로직 삭제 -> 영인님의 실제 영구 스키마 컬럼인 'set_id'로 정확히 쿼리 실행
+        const { data: cards, error: cardErr } = await client
+            .from('cards')
+            .select('*')
+            .in('set_id', setIds);
+
+        if (cardErr) {
+            area.innerHTML = `<div style="text-align:center; padding:50px; color:red;">카드 로드 오류: ${cardErr.message}</div>`;
+            return;
+        }
+
+        // 가져온 카드들을 번호(number) 순으로 안전하게 정렬합니다.
+        masterCards = (cards || []).sort((a, b) => {
+            const numA = parseInt(a.number) || 0;
+            const numB = parseInt(b.number) || 0;
+            return numA - numB;
+        });
+
+        if (masterCards.length === 0) {
+            area.innerHTML = `<div style="text-align:center; padding:100px; color:var(--dim)">해당 세트(set_id)에 등록된 카드 데이터가 전부 비어있습니다.</div>`;
+            return;
+        }
+
+        area.innerHTML = '';
+        
+        // 화면에 세트별로 구역(Section)을 만들어서 뿌려줍니다.
+        sets.forEach(set => {
+            // 주입 타겟: 현재 세트의 id와 카드의 set_id 매칭
+            const sCards = masterCards.filter(c => c.set_id === set.id);
+            if (sCards.length === 0) return; // 카드가 없으면 구역 생성 패스
+
+            const sec = document.createElement('div');
+            sec.id = 'sec-' + set.id;
+            sec.innerHTML = `<div class="section-title">${set.name} (${sCards.length}장)</div>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'card-grid';
+            
+            sCards.forEach(card => {
+                const gIdx = masterCards.findIndex(c => c.id === card.id);
+                const wrap = document.createElement('div');
+                wrap.className = 'card-wrap';
+                wrap.onclick = () => openDetail(gIdx);
+                
+                // 이미지가 null일 경우 대안 주소 처리
+                const cardImg = card.image_small || card.image_large || 'https://via.placeholder.com/250x350?text=No+Image';
+                wrap.innerHTML = `<img src="${cardImg}" loading="lazy" alt="${card.name || 'Pokemon Card'}">`;
+                grid.appendChild(wrap);
+            });
+            
+            sec.appendChild(grid);
+            area.appendChild(sec);
+        });
+
+        // 스크롤 시 상단 슬라이더 아이콘 상태 업데이트해주는 인터섹션 감지 추가 (선택 사항 - UI 최적화)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    const setId = entry.target.id.replace('sec-', '');
+                    document.querySelectorAll('.set-icon-card').forEach(c => c.classList.remove('active'));
+                    document.getElementById('thumb-' + setId)?.classList.add('active');
+                }
+            });
+        }, { threshold: 0.2 });
+
+        sets.forEach(set => {
+            const el = document.getElementById('sec-' + set.id);
+            if(el) observer.observe(el);
+        });
+    }
+
+    // 5. 모달 상세 보기 로직 보정 (레듈레이션 마크 및 부가정보 바인딩)
+    function openDetail(idx) {
+        currentIdx = idx;
+        const card = masterCards[idx];
+        
+        const imgEl = document.getElementById('detail-img');
+        imgEl.src = card.image_large || card.image_small || 'https://via.placeholder.com/350x490?text=No+Image';
+        
+        document.getElementById('detail-name').innerText = card.name || '이름 없음';
+        document.getElementById('detail-count').innerText = `${idx + 1} / ${masterCards.length}`;
+        
+        // 상세 데이터 정보 텍스트 구성
+        let infoHtml = `
+            <div><strong>ID:</strong> ${card.id} | <strong>No.</strong> ${card.number || 'N/A'}</div>
+            <div><strong>Rarity:</strong> ${card.rarity || 'N/A'} | <strong>HP:</strong> ${card.hp || 'N/A'}</div>
+            ${card.regulationMark ? `<div><strong>Regulation:</strong> ${card.regulationMark}</div>` : ''}
+            ${card.artist ? `<div style="margin-top:5px;"><small>Artist: ${card.artist}</small></div>` : ''}
+        `;
+        document.getElementById('detail-info').innerHTML = infoHtml;
+        
+        document.getElementById('detail-view').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetail() { 
+        document.getElementById('detail-view').classList.remove('open'); 
+        document.body.style.overflow = ''; 
+    }
+    
+    function nextCard() { if(currentIdx < masterCards.length - 1) openDetail(currentIdx + 1); }
+    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
+
+    // 시작 부팅
+    init();
+</script>
+</body>
+</html>
