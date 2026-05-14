@@ -6,50 +6,42 @@
     <title>MOODIT TCG MASTER</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; }
-        .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11, 13, 15, 0.95); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); }
-        .series-bar { display: flex; overflow-x: auto; padding: 15px; gap: 10px; scrollbar-width: none; }
-        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; }
-        .series-tab.active { background: #fff; color: #000; font-weight: 800; }
-        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; min-height: 110px; }
-        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; }
-        .set-icon-card img { width: 60px; height: 60px; object-fit: contain; background: #000; border-radius: 12px; padding: 5px; border: 1px solid var(--border); }
-        .main-view { padding: 15px; }
-        .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
-        .card-wrap { position: relative; border-radius: 8px; overflow: hidden; background: #111; aspect-ratio: 250/350; }
-        .card-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        /* 상세 페이지 */
-        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; overflow-y: auto; }
-        #detail-view.open { display: flex; }
-        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg)); display: flex; justify-content: center; gap: 30px; }
-        .nav-btn { background: #fff; color: #000; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --border: rgba(255,255,255,0.1); }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
+        .header { position: sticky; top: 0; z-index: 1000; background: #0b0d0f; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 10px; gap: 10px; scrollbar-width: none; }
+        .tab { padding: 8px 15px; background: #222; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 14px; }
+        .tab.active { background: #fff; color: #000; font-weight: bold; }
+        .set-icon { flex-shrink: 0; width: 70px; text-align: center; }
+        .set-icon img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid var(--border); }
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
+        .card { background: #111; border-radius: 5px; overflow: hidden; aspect-ratio: 2.5/3.5; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        /* 상세페이지 */
+        #detail { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; flex-direction: column; }
+        #detail.active { display: flex; }
+        .nav-btns { display: flex; justify-content: center; gap: 40px; padding: 30px; }
+        .btn { width: 60px; height: 60px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header-fixed">
+<div class="header">
     <div class="series-bar" id="series-bar"></div>
     <div class="set-slider" id="set-slider"></div>
 </div>
 
-<div class="main-view" id="content-area"></div>
+<div id="content-area"></div>
 
-<div id="detail-view">
-    <div style="display:flex; justify-content:space-between; padding:20px;">
-        <span id="detail-count"></span>
-        <span onclick="closeDetail()" style="font-size:30px;">&times;</span>
-    </div>
-    <div style="padding:20px; display:flex; flex-direction:column; align-items:center;">
-        <img id="detail-img" style="width:100%; max-width:350px; border-radius:15px; margin-bottom:20px;">
+<div id="detail">
+    <div style="padding: 20px; text-align: right; font-size: 30px;" onclick="closeDetail()">&times;</div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <img id="detail-img" style="width: 80%; max-width: 350px; border-radius: 15px;">
         <h2 id="detail-name"></h2>
-        <div id="detail-attacks" style="width:100%; max-width:400px;"></div>
     </div>
-    <div class="footer-nav">
-        <div class="nav-btn" onclick="prevCard()">◀</div>
-        <div class="nav-btn" onclick="nextCard()">▶</div>
+    <div class="nav-btns">
+        <div class="btn" onclick="prev()">◀</div>
+        <div class="btn" onclick="next()">▶</div>
     </div>
 </div>
 
@@ -58,129 +50,97 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
     const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    let masterCards = [];
-    let currentIdx = 0;
+    let cards = [];
+    let curIdx = 0;
 
     async function init() {
-        try {
-            const { data: seriesData, error } = await client.from('series').select('*').order('series');
-            if (error) throw error;
+        const { data: series } = await client.from('series').select('*').order('series');
+        const bar = document.getElementById('series-bar');
+        
+        const allTab = document.createElement('div');
+        allTab.className = 'tab active';
+        allTab.innerText = 'ALL';
+        allTab.onclick = () => loadData(null);
+        bar.appendChild(allTab);
 
-            const bar = document.getElementById('series-bar');
-            bar.innerHTML = '<div class="series-tab active" id="tab-all">ALL</div>';
-            document.getElementById('tab-all').onclick = (e) => {
-                updateActiveTab(e.target);
-                loadContent(null);
-            };
-
-            seriesData.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'series-tab';
-                div.innerText = s.series;
-                div.onclick = (e) => {
-                    updateActiveTab(e.target);
-                    loadContent(s.series);
-                };
-                bar.appendChild(div);
-            });
-
-            loadContent(null);
-        } catch (e) { console.error("Init Error:", e); }
+        series.forEach(s => {
+            const t = document.createElement('div');
+            t.className = 'tab';
+            t.innerText = s.series;
+            t.onclick = () => loadData(s.series);
+            bar.appendChild(t);
+        });
+        loadData(null);
     }
 
-    function updateActiveTab(target) {
-        document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
-        target.classList.add('active');
-    }
-
-    async function loadContent(seriesName) {
+    async function loadData(seriesName) {
         const area = document.getElementById('content-area');
-        area.innerHTML = '<div style="text-align:center; padding-top:100px;">카드를 읽어오는 중...</div>';
+        area.innerHTML = '<div style="text-align:center; padding:50px;">데이터 로딩 중...</div>';
+
+        // 1. 세트 가져오기
+        let sQ = client.from('sets').select('*').order('releaseDate', {ascending: false});
+        if(seriesName) sQ = sQ.eq('series', seriesName);
+        const { data: sets } = await sQ;
+
+        // 2. 세트 슬라이더
+        const slider = document.getElementById('set-slider');
+        slider.innerHTML = '';
+        sets.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'set-icon';
+            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}">`;
+            div.onclick = () => document.getElementById('sec-'+s.id)?.scrollIntoView({behavior:'smooth'});
+            slider.appendChild(div);
+        });
+
+        // 3. 카드 가져오기 (가장 중요한 부분)
+        // 쿼리 단순화: 필터링 없이 일단 긁어본 후 클라이언트에서 매칭
+        const sIds = sets.map(s => s.id);
+        const { data: cData, error } = await client.from('cards').select('*').in('set_id', sIds);
         
-        try {
-            // 1. 세트 가져오기
-            let sQuery = client.from('sets').select('*').order('releaseDate', {ascending: false});
-            if(seriesName) sQuery = sQuery.eq('series', seriesName);
-            const { data: sets, error: sError } = await sQuery;
-            if(sError) throw sError;
-
-            // 2. 세트 슬라이더
-            const slider = document.getElementById('set-slider');
-            slider.innerHTML = '<div class="set-icon-card" onclick="window.scrollTo({top:0, behavior:\'smooth\'})"><div style="width:60px; height:60px; background:var(--accent); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#000; font-weight:bold;">ALL</div><span>TOP</span></div>';
-            
-            sets.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'set-icon-card';
-                div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
-                div.onclick = () => document.getElementById('sec-'+s.id)?.scrollIntoView({behavior:'smooth', block:'start'});
-                slider.appendChild(div);
-            });
-
-            // 3. 카드 가져오기 (전체 혹은 시리즈별)
-            let allCards = [];
-            const setIds = sets.map(s => s.id);
-            
-            // 데이터가 너무 많을 수 있으므로 20개 세트씩 끊어서 쿼리 (안전장치)
-            for (let i = 0; i < setIds.length; i += 20) {
-                const chunk = setIds.slice(i, i + 20);
-                const { data: cData, error: cError } = await client.from('cards').select('id, name, number, image_small, image_large, set_id, supertype, hp, rarity, attacks').in('set_id', chunk).order('number', {ascending: true});
-                if(cError) throw cError;
-                allCards = [...allCards, ...cData];
-            }
-
-            masterCards = allCards;
-            area.innerHTML = '';
-
-            // 4. 화면 구성
-            sets.forEach(set => {
-                const sCards = allCards.filter(c => c.set_id === set.id);
-                if(sCards.length === 0) return;
-
-                const sec = document.createElement('div');
-                sec.id = 'sec-' + set.id;
-                sec.innerHTML = `<div class="section-title">${set.name}</div>`;
-                const grid = document.createElement('div');
-                grid.className = 'card-grid';
-                
-                sCards.forEach(card => {
-                    const gIdx = allCards.findIndex(c => c.id === card.id);
-                    const wrap = document.createElement('div');
-                    wrap.className = 'card-wrap';
-                    wrap.onclick = () => openDetail(gIdx);
-                    wrap.innerHTML = `<img src="${card.image_small}" loading="lazy">`;
-                    grid.appendChild(wrap);
-                });
-                sec.appendChild(grid);
-                area.appendChild(sec);
-            });
-
-        } catch (err) {
-            area.innerHTML = `<div style="color:red; padding:20px;">에러 발생: ${err.message}</div>`;
-            console.error("Load Error:", err);
+        if(error || !cData || cData.length === 0) {
+            area.innerHTML = `<div style="color:red; padding:20px;">카드를 가져오지 못했습니다. 에러: ${error?.message || '데이터 없음'}</div>`;
+            return;
         }
+
+        cards = cData.sort((a,b) => a.number - b.number);
+        area.innerHTML = '';
+
+        // 4. 그리기
+        sets.forEach(set => {
+            const sCards = cards.filter(c => c.set_id == set.id);
+            if(sCards.length === 0) return;
+
+            const sec = document.createElement('div');
+            sec.id = 'sec-' + set.id;
+            sec.innerHTML = `<div style="padding:15px; font-weight:bold; border-bottom:1px solid #222;">${set.name}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'card-grid';
+            
+            sCards.forEach(card => {
+                const idx = cards.findIndex(c => c.id === card.id);
+                const wrap = document.createElement('div');
+                wrap.className = 'card';
+                wrap.onclick = () => open(idx);
+                wrap.innerHTML = `<img src="${card.image_small}" loading="lazy">`;
+                grid.appendChild(wrap);
+            });
+            sec.appendChild(grid);
+            area.appendChild(sec);
+        });
     }
 
-    function openDetail(idx) {
-        currentIdx = idx;
-        const card = masterCards[currentIdx];
-        document.getElementById('detail-img').src = card.image_large;
-        document.getElementById('detail-name').innerText = card.name;
-        document.getElementById('detail-count').innerText = `${currentIdx + 1} / ${masterCards.length}`;
-        
-        let atkHtml = '';
-        if(card.attacks) {
-            card.attacks.forEach(a => {
-                atkHtml += `<div style="background:#222; padding:10px; margin-top:10px; border-radius:10px;"><b>${a.name}</b> ${a.damage || ''}<br><small>${a.text || ''}</small></div>`;
-            });
-        }
-        document.getElementById('detail-attacks').innerHTML = atkHtml;
-        document.getElementById('detail-view').classList.add('open');
+    function open(i) {
+        curIdx = i;
+        document.getElementById('detail-img').src = cards[curIdx].image_large;
+        document.getElementById('detail-name').innerText = cards[curIdx].name;
+        document.getElementById('detail').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeDetail() { document.getElementById('detail-view').classList.remove('open'); document.body.style.overflow = ''; }
-    function nextCard() { if(currentIdx < masterCards.length - 1) openDetail(currentIdx + 1); }
-    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
+    function closeDetail() { document.getElementById('detail').classList.remove('active'); document.body.style.overflow = ''; }
+    function next() { if(curIdx < cards.length -1) open(curIdx + 1); }
+    function prev() { if(curIdx > 0) open(curIdx - 1); }
 
     init();
 </script>
