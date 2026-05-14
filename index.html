@@ -3,78 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT POKEDEX MOBILE</title>
+    <title>MOODIT TCG ARCHIVE PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg: #0b0d0f; --panel: #16181c; --accent: #f1c40f;
             --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1);
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; overflow-x: hidden; }
 
-        /* 상단 고정 필터 */
-        .sticky-header { position: sticky; top: 0; z-index: 100; background: rgba(11,13,15,0.9); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); }
+        /* 상단 네비게이션 */
+        .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11, 13, 15, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
         
-        /* 1단: 시리즈 텍스트 탭 (좌우 스크롤) */
-        .scroll-row { display: flex; overflow-x: auto; padding: 12px 15px; gap: 10px; scrollbar-width: none; }
-        .scroll-row::-webkit-scrollbar { display: none; }
-        .tab { padding: 6px 16px; background: #222; border-radius: 20px; font-size: 0.85rem; white-space: nowrap; color: var(--dim); cursor: pointer; }
-        .tab.active { background: #fff; color: #000; font-weight: bold; }
+        /* 1단: 시리즈 텍스트 탭 */
+        .series-bar { display: flex; overflow-x: auto; padding: 15px 15px 5px; gap: 10px; scrollbar-width: none; }
+        .series-bar::-webkit-scrollbar { display: none; }
+        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .series-tab.active { background: #fff; color: #000; font-weight: 800; }
 
-        /* 2단: 선택된 시리즈의 세트 이미지 (좌우 스크롤) */
-        .image-scroll-row { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; }
-        .image-scroll-row::-webkit-scrollbar { display: none; }
-        .set-card { flex-shrink: 0; width: 100px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .set-card img { width: 70px; height: 70px; object-fit: contain; background: #000; border-radius: 12px; padding: 5px; border: 2px solid transparent; }
-        .set-card.active img { border-color: var(--accent); transform: scale(1.1); }
-        .set-card span { display: block; font-size: 0.7rem; color: var(--dim); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* 2단: 세트 이미지 슬라이드 */
+        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; }
+        .set-slider::-webkit-scrollbar { display: none; }
+        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .set-icon-card.active { opacity: 1; transform: scale(1.1); }
+        .set-icon-card img { width: 65px; height: 65px; object-fit: contain; background: #000; border-radius: 15px; padding: 8px; border: 1px solid var(--border); }
+        .set-icon-card span { display: block; font-size: 0.65rem; color: var(--dim); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* 메인: 카드 그리드 */
-        .main-content { padding: 15px; }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .card-item { position: relative; border-radius: 8px; overflow: hidden; background: #111; }
-        .card-item img { width: 100%; aspect-ratio: 250/350; object-fit: cover; display: block; }
-
-        /* 상세 페이지 (모달 형식) */
-        .detail-page { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--bg); flex-direction: column; }
-        .detail-page.open { display: flex; }
-        .detail-nav { display: flex; justify-content: space-between; padding: 20px; align-items: center; }
-        .close-x { font-size: 30px; cursor: pointer; }
+        /* 메인 영역 */
+        .main-view { padding: 15px; min-height: 100vh; }
+        .section-title { font-size: 1.2rem; font-weight: 800; margin: 20px 0 15px; padding-left: 5px; border-left: 4px solid var(--accent); }
         
-        .detail-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .detail-main-img { width: 85%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 20px; }
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .card-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; }
+        .card-wrap:active { transform: scale(0.95); }
+        .card-wrap img { width: 100%; aspect-ratio: 250/350; object-fit: cover; display: block; }
+        .card-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; backdrop-filter: blur(4px); }
+
+        /* 상세 페이지 모달 */
+        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; animation: slideUp 0.3s ease; }
+        #detail-view.open { display: flex; }
         
-        /* 하단 슬라이드 버튼 */
-        .slide-ctrl { display: flex; gap: 40px; padding-bottom: 50px; }
-        .ctrl-btn { background: var(--panel); border: 1px solid var(--border); color: #fff; padding: 15px 30px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; }
+        .detail-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border); }
+        .detail-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .big-card-img { width: 90%; max-width: 380px; border-radius: 18px; filter: drop-shadow(0 15px 40px rgba(0,0,0,0.9)); margin-bottom: 30px; }
+        .detail-info h2 { font-size: 1.8rem; margin: 0 0 10px 0; font-weight: 900; }
+        .detail-meta { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tag { padding: 4px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border); }
+
+        /* 하단 컨트롤 */
+        .bottom-nav { display: flex; width: 100%; justify-content: space-around; padding: 20px 20px 40px; background: linear-gradient(transparent, var(--bg)); }
+        .nav-btn { background: #222; border: 1px solid var(--border); color: #fff; width: 60px; height: 60px; border-radius: 50%; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        .nav-btn:active { background: #444; }
+
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="sticky-header">
-    <div class="scroll-row" id="series-row"></div>
-    <div class="image-scroll-row" id="set-row"></div>
+<div class="header-fixed">
+    <div class="series-bar" id="series-bar"></div>
+    <div class="set-slider" id="set-slider"></div>
 </div>
 
-<div class="main-content">
-    <div class="card-grid" id="card-grid"></div>
+<div class="main-view">
+    <div id="content-area"></div>
 </div>
 
-<div id="detail-page" class="detail-page">
-    <div class="detail-nav">
-        <div id="detail-set-info" style="color:var(--dim); font-size:0.8rem;"></div>
-        <div class="close-x" onclick="closeDetail()">&times;</div>
+<div id="detail-view">
+    <div class="detail-header">
+        <span id="detail-count" style="font-size: 0.8rem; color: var(--dim);"></span>
+        <span onclick="closeDetail()" style="font-size: 30px;">&times;</span>
     </div>
     <div class="detail-body">
-        <img id="detail-img" class="detail-main-img" src="">
-        <h2 id="detail-name" style="margin:10px 0 5px;"></h2>
-        <p id="detail-meta" style="color:var(--accent); font-weight:bold;"></p>
-        
-        <div class="slide-ctrl">
-            <button class="ctrl-btn" onclick="prevCard()">◀</button>
-            <button class="ctrl-btn" onclick="nextCard()">▶</button>
+        <img id="detail-img" class="big-card-img" src="">
+        <div class="detail-info">
+            <h2 id="detail-name"></h2>
+            <div class="detail-meta" id="detail-tags"></div>
         </div>
+        <div id="detail-attacks" style="width:100%; text-align:left; max-width:400px; margin-top:20px;"></div>
+    </div>
+    <div class="bottom-nav">
+        <div class="nav-btn" onclick="prevCard()">◀</div>
+        <div class="nav-btn" onclick="nextCard()">▶</div>
     </div>
 </div>
 
@@ -83,79 +95,112 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
     const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    let currentCards = [];
-    let currentIndex = 0;
+    let currentSeriesCards = [];
+    let currentIdx = 0;
 
     async function init() {
         const { data: series } = await client.from('series').select('*').order('series');
-        const row = document.getElementById('series-row');
+        const bar = document.getElementById('series-bar');
         series.forEach((s, idx) => {
             const div = document.createElement('div');
-            div.className = `tab ${idx === 0 ? 'active' : ''}`;
+            div.className = `series-tab ${idx === 0 ? 'active' : ''}`;
             div.innerText = s.series;
-            div.onclick = (e) => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                div.classList.add('active');
-                loadSets(s.series);
-            };
-            row.appendChild(div);
-            if(idx === 0) loadSets(s.series);
-        });
-    }
-
-    async function loadSets(seriesName) {
-        const { data: sets } = await client.from('sets').select('*').eq('series', seriesName).order('releaseDate', {ascending: false});
-        const row = document.getElementById('set-row');
-        row.innerHTML = '';
-        sets.forEach((s, idx) => {
-            const div = document.createElement('div');
-            div.className = `set-card ${idx === 0 ? 'active' : ''}`;
-            div.innerHTML = `
-                <img src="${s.image_logo || s.image_symbol}">
-                <span>${s.name}</span>
-            `;
             div.onclick = () => {
-                document.querySelectorAll('.set-card').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
                 div.classList.add('active');
-                loadCards(s.id);
+                loadSeriesContent(s.series);
             };
-            row.appendChild(div);
-            if(idx === 0) loadCards(s.id);
+            bar.appendChild(div);
+            if(idx === 0) loadSeriesContent(s.series);
         });
     }
 
-    async function loadCards(setId) {
-        const { data: cards } = await client.from('cards').select('*').eq('set_id', setId).order('number', {ascending: true});
-        currentCards = cards;
-        const grid = document.getElementById('card-grid');
-        grid.innerHTML = '';
-        cards.forEach((c, idx) => {
-            const item = document.createElement('div');
-            item.className = 'card-item';
-            item.onclick = () => openDetail(idx);
-            item.innerHTML = `<img src="${c.image_small}" loading="lazy">`;
-            grid.appendChild(item);
+    async function loadSeriesContent(seriesName) {
+        // 1. 해당 시리즈의 세트 목록 가져오기
+        const { data: sets } = await client.from('sets').select('*').eq('series', seriesName).order('releaseDate', {ascending: false});
+        const slider = document.getElementById('set-slider');
+        slider.innerHTML = '';
+        
+        sets.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'set-icon-card';
+            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
+            div.onclick = () => {
+                document.getElementById(s.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            slider.appendChild(div);
+        });
+
+        // 2. 해당 시리즈의 모든 카드 한꺼번에 가져오기
+        const { data: cards } = await client.from('cards').select('*').in('set_id', sets.map(s => s.id)).order('set_id').order('number', {ascending: true});
+        currentSeriesCards = cards;
+        
+        const area = document.getElementById('content-area');
+        area.innerHTML = '';
+
+        // 세트별로 그룹화하여 화면에 출력
+        sets.forEach(set => {
+            const setCards = cards.filter(c => c.set_id === set.id);
+            if(setCards.length === 0) return;
+
+            const section = document.createElement('div');
+            section.id = set.id;
+            section.innerHTML = `<div class="section-title">${set.name} (${setCards.length})</div>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'card-grid';
+            
+            setCards.forEach(card => {
+                const globalIdx = cards.findIndex(c => c.id === card.id);
+                const wrap = document.createElement('div');
+                wrap.className = 'card-wrap';
+                wrap.onclick = () => openDetail(globalIdx);
+                wrap.innerHTML = `
+                    <div class="card-badge">#${card.number}</div>
+                    <img src="${card.image_small}" loading="lazy">
+                `;
+                grid.appendChild(wrap);
+            });
+            
+            section.appendChild(grid);
+            area.appendChild(section);
         });
     }
 
     function openDetail(idx) {
-        currentIndex = idx;
-        const card = currentCards[currentIndex];
+        currentIdx = idx;
+        const card = currentSeriesCards[currentIdx];
         document.getElementById('detail-img').src = card.image_large;
         document.getElementById('detail-name').innerText = card.name;
-        document.getElementById('detail-meta').innerText = `${card.hp ? card.hp + ' HP' : ''} / ${card.rarity || ''}`;
-        document.getElementById('detail-set-info').innerText = `${currentIndex + 1} / ${currentCards.length}`;
-        document.getElementById('detail-page').classList.add('open');
+        document.getElementById('detail-count').innerText = `${currentIdx + 1} / ${currentSeriesCards.length}`;
+        
+        document.getElementById('detail-tags').innerHTML = `
+            <div class="tag">${card.supertype}</div>
+            <div class="tag">${card.hp ? card.hp + ' HP' : 'NO HP'}</div>
+            <div class="tag">${card.rarity || 'Common'}</div>
+        `;
+
+        let atkHtml = '';
+        if(card.attacks) {
+            card.attacks.forEach(a => {
+                atkHtml += `<div style="margin-bottom:15px; padding:10px; background:#1c1f24; border-radius:10px;">
+                    <div style="font-weight:800; color:var(--accent);">${a.name} <span style="float:right;">${a.damage || ''}</span></div>
+                    <div style="font-size:0.8rem; color:var(--dim); margin-top:5px;">${a.text || ''}</div>
+                </div>`;
+            });
+        }
+        document.getElementById('detail-attacks').innerHTML = atkHtml;
+        document.getElementById('detail-view').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
     function closeDetail() {
-        document.getElementById('detail-page').classList.remove('open');
+        document.getElementById('detail-view').classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    function nextCard() { if(currentIndex < currentCards.length - 1) openDetail(currentIndex + 1); }
-    function prevCard() { if(currentIndex > 0) openDetail(currentIndex - 1); }
+    function nextCard() { if(currentIdx < currentSeriesCards.length - 1) openDetail(currentIdx + 1); }
+    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
 
     init();
 </script>
