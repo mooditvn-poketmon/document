@@ -18,18 +18,17 @@
         /* 1단 시리즈 바 */
         .series-bar { display: flex; overflow-x: auto; padding: 15px 15px 5px; gap: 10px; scrollbar-width: none; }
         .series-bar::-webkit-scrollbar { display: none; }
-        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; }
+        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; border: 1px solid transparent; }
         .series-tab.active { background: #fff; color: #000; font-weight: 800; }
 
         /* 2단 세트 슬라이더 */
-        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; min-height: 100px; }
+        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; min-height: 110px; }
         .set-slider::-webkit-scrollbar { display: none; }
         .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; }
         .set-icon-card img { width: 65px; height: 65px; object-fit: contain; background: #000; border-radius: 15px; padding: 8px; border: 1px solid var(--border); }
-        .set-icon-card.all-icon img { background: var(--accent); display: flex; align-items: center; justify-content: center; }
         .set-icon-card span { display: block; font-size: 0.65rem; color: #fff; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .main-view { padding: 15px; min-height: 80vh; }
+        .main-view { padding: 15px; min-height: 100vh; }
         .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 10px; }
         .section-title img { height: 22px; object-fit: contain; }
         
@@ -41,15 +40,11 @@
         /* 상세 페이지 */
         #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; overflow-y: auto; }
         #detail-view.open { display: flex; }
-        .detail-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); }
+        .detail-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border); }
         .detail-body { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
         .big-card-img { width: 100%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 30px; }
-        .info-panel { width: 100%; max-width: 450px; }
-        .attack-box { background: #1a1d21; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .atk-header { display: flex; justify-content: space-between; font-weight: 800; color: #fff; }
-        .atk-desc { font-size: 0.85rem; color: var(--dim); margin-top: 5px; line-height: 1.4; }
-
-        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; z-index: 10; }
+        
+        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; }
         .nav-btn { background: #fff; color: #000; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -60,7 +55,9 @@
     <div class="set-slider" id="set-slider"></div>
 </div>
 
-<div class="main-view" id="content-area"></div>
+<div class="main-view" id="content-area">
+    <div style="text-align:center; padding-top:100px; color:var(--dim);">데이터를 불러오는 중...</div>
+</div>
 
 <div id="detail-view">
     <div class="detail-header">
@@ -69,7 +66,7 @@
     </div>
     <div class="detail-body">
         <img id="detail-img" class="big-card-img" src="">
-        <div class="info-panel">
+        <div style="width:100%; max-width:450px;">
             <h2 id="detail-name" style="font-size: 1.8rem; margin: 0 0 10px; font-weight: 900;"></h2>
             <div id="detail-tags" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px;"></div>
             <div id="detail-attacks"></div>
@@ -90,50 +87,53 @@
     let currentIdx = 0;
 
     async function init() {
-        const { data: series } = await client.from('series').select('*').order('series');
+        const { data: seriesData } = await client.from('series').select('*').order('series');
         const bar = document.getElementById('series-bar');
         
-        // Series [ALL]
+        // 1단 Series [ALL]
         const allTab = document.createElement('div');
         allTab.className = 'series-tab active';
         allTab.innerText = 'ALL';
         allTab.onclick = () => {
             document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
             allTab.classList.add('active');
-            loadContent(null);
+            renderView(null);
         };
         bar.appendChild(allTab);
 
-        series.forEach(s => {
+        seriesData.forEach(s => {
             const div = document.createElement('div');
             div.className = 'series-tab';
             div.innerText = s.series;
             div.onclick = () => {
                 document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
                 div.classList.add('active');
-                loadContent(s.series);
+                renderView(s.series);
             };
             bar.appendChild(div);
         });
 
-        loadContent(null);
+        renderView(null);
     }
 
-    async function loadContent(seriesName) {
-        // 1. Sets 가져오기
-        let setsQuery = client.from('sets').select('*').order('releaseDate', {ascending: false});
-        if(seriesName) setsQuery = setsQuery.eq('series', seriesName);
-        const { data: sets } = await setsQuery;
+    async function renderView(filterSeries) {
+        const area = document.getElementById('content-area');
+        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">Loading Cards...</div>';
 
+        // 1. 세트 데이터 가져오기
+        let sQuery = client.from('sets').select('*').order('releaseDate', {ascending: false});
+        if(filterSeries) sQuery = sQuery.eq('series', filterSeries);
+        const { data: sets } = await sQuery;
+
+        // 2. 세트 슬라이더 업데이트
         const slider = document.getElementById('set-slider');
         slider.innerHTML = '';
         
-        // Sets [ALL]
-        const allSetIcon = document.createElement('div');
-        allSetIcon.className = 'set-icon-card all-icon';
-        allSetIcon.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/000000/grid.png"><span>ALL</span>`;
-        allSetIcon.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-        slider.appendChild(allSetIcon);
+        const allSet = document.createElement('div');
+        allSet.className = 'set-icon-card';
+        allSet.innerHTML = `<div style="width:65px; height:65px; background:var(--accent); border-radius:15px; display:flex; align-items:center; justify-content:center; color:#000; font-weight:bold;">ALL</div><span>TOP</span>`;
+        allSet.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        slider.appendChild(allSet);
 
         sets.forEach(s => {
             const div = document.createElement('div');
@@ -141,34 +141,48 @@
             div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
             div.onclick = () => {
                 const target = document.getElementById('sec-' + s.id);
-                if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if(target) {
+                    const offset = 180; // 헤더 높이만큼 오프셋
+                    const bodyRect = document.body.getBoundingClientRect().top;
+                    const elementRect = target.getBoundingClientRect().top;
+                    const elementPosition = elementRect - bodyRect;
+                    const offsetPosition = elementPosition - offset;
+                    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                }
             };
             slider.appendChild(div);
         });
 
-        // 2. Cards 가져오기
+        // 3. 카드 데이터 가져오기 (배열이 너무 크면 나눠서 가져오도록 안전장치)
+        let cards = [];
         const setIds = sets.map(s => s.id);
-        const { data: cards } = await client.from('cards').select('*').in('set_id', setIds).order('set_id').order('number', {ascending: true});
-        masterCards = cards;
         
-        const area = document.getElementById('content-area');
+        // Supabase .in 필터는 보통 100-200개 이상이면 끊길 수 있으므로 분할 처리
+        for (let i = 0; i < setIds.length; i += 50) {
+            const chunk = setIds.slice(i, i + 50);
+            const { data: chunkCards } = await client.from('cards').select('*').in('set_id', chunk).order('set_id').order('number', {ascending: true});
+            if(chunkCards) cards = [...cards, ...chunkCards];
+        }
+        
+        masterCards = cards;
         area.innerHTML = '';
 
+        // 4. 화면 렌더링
         sets.forEach(set => {
             const setCards = cards.filter(c => c.set_id === set.id);
             if(setCards.length === 0) return;
 
             const section = document.createElement('div');
-            section.id = 'sec-' + set.id; // ID 겹침 방지
+            section.id = 'sec-' + set.id;
             section.innerHTML = `<div class="section-title"><img src="${set.image_symbol || ''}">${set.name}</div>`;
             
             const grid = document.createElement('div');
             grid.className = 'card-grid';
             setCards.forEach(card => {
-                const gIdx = cards.findIndex(c => c.id === card.id);
+                const globalIdx = cards.findIndex(c => c.id === card.id);
                 const wrap = document.createElement('div');
                 wrap.className = 'card-wrap';
-                wrap.onclick = () => openDetail(gIdx);
+                wrap.onclick = () => openDetail(globalIdx);
                 wrap.innerHTML = `<div class="card-badge">#${card.number}</div><img src="${card.image_small}" loading="lazy">`;
                 grid.appendChild(wrap);
             });
@@ -185,16 +199,12 @@
         document.getElementById('detail-img').src = card.image_large;
         document.getElementById('detail-name').innerText = card.name;
         document.getElementById('detail-count').innerText = `CARD ${currentIdx + 1} / ${masterCards.length}`;
-        
-        document.getElementById('detail-tags').innerHTML = `
-            <div style="padding: 5px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border);">${card.supertype}</div>
-            <div style="padding: 5px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border);">${card.hp || 'N/A'} HP</div>
-        `;
+        document.getElementById('detail-tags').innerHTML = `<div style="padding:5px 12px; background:#222; border-radius:6px; color:var(--accent); font-size:0.8rem; border:1px solid var(--border);">${card.supertype}</div><div style="padding:5px 12px; background:#222; border-radius:6px; color:var(--accent); font-size:0.8rem; border:1px solid var(--border);">${card.hp || 'N/A'} HP</div>`;
 
         let atkHtml = '';
         if(card.attacks) {
             card.attacks.forEach(a => {
-                atkHtml += `<div class="attack-box"><div class="atk-header"><span>${a.name}</span><span>${a.damage || ''}</span></div><div class="atk-desc">${a.text || ''}</div></div>`;
+                atkHtml += `<div style="background:#1a1d21; border-radius:12px; padding:15px; margin-bottom:12px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; font-weight:800;"><span>${a.name}</span><span>${a.damage || ''}</span></div><div style="font-size:0.85rem; color:var(--dim); margin-top:5px;">${a.text || ''}</div></div>`;
             });
         }
         document.getElementById('detail-attacks').innerHTML = atkHtml;
