@@ -6,35 +6,72 @@
     <title>MOODIT TCG MASTER</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --border: rgba(255,255,255,0.1); }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
-        .header { position: sticky; top: 0; z-index: 1000; background: #0b0d0f; border-bottom: 1px solid var(--border); }
-        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 10px; gap: 10px; scrollbar-width: none; }
-        .tab { padding: 8px 15px; background: #222; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 14px; }
-        .tab.active { background: #fff; color: #000; font-weight: bold; }
-        .set-icon { flex-shrink: 0; width: 70px; text-align: center; cursor: pointer; }
-        .set-icon img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid var(--border); }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
-        .card { background: #111; border-radius: 5px; overflow: hidden; aspect-ratio: 2.5/3.5; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        #detail { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; flex-direction: column; }
-        #detail.active { display: flex; }
+        :root {
+            --bg: #0b0d0f; --panel: #16181c; --accent: #f1c40f;
+            --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; }
+
+        /* 헤더 섹션 */
+        .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11, 13, 15, 0.98); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); }
+        .series-bar { display: flex; overflow-x: auto; padding: 15px 15px 5px; gap: 10px; scrollbar-width: none; }
+        .series-bar::-webkit-scrollbar { display: none; }
+        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; transition: 0.2s; }
+        .series-tab.active { background: #fff; color: #000; font-weight: 800; }
+
+        /* 세트 슬라이더 (2행) */
+        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; min-height: 110px; }
+        .set-slider::-webkit-scrollbar { display: none; }
+        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; }
+        .set-icon-card img { width: 65px; height: 65px; object-fit: contain; background: #000; border-radius: 15px; padding: 8px; border: 1px solid var(--border); }
+        .set-icon-card span { display: block; font-size: 0.65rem; color: #fff; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* 메인 뷰 */
+        .main-view { padding: 15px; min-height: 100vh; }
+        .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 10px; }
+        .section-title img { height: 22px; object-fit: contain; }
+        
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 40px; }
+        .card-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #111; aspect-ratio: 250/350; }
+        .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 10; }
+
+        /* 상세 페이지 */
+        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; overflow-y: auto; }
+        #detail-view.open { display: flex; }
+        .detail-header { display: flex; justify-content: space-between; padding: 20px; align-items: center; border-bottom: 1px solid var(--border); }
+        .detail-body { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
+        .big-card-img { width: 100%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 30px; }
+        
+        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; }
+        .nav-btn { background: #fff; color: #000; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="header">
+<div class="header-fixed">
     <div class="series-bar" id="series-bar"></div>
     <div class="set-slider" id="set-slider"></div>
 </div>
 
-<div id="content-area"></div>
+<div class="main-view" id="content-area"></div>
 
-<div id="detail">
-    <div style="padding: 20px; text-align: right; font-size: 30px;" onclick="closeDetail()">&times;</div>
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img id="detail-img" style="width: 80%; max-width: 350px; border-radius: 15px;">
-        <h2 id="detail-name"></h2>
+<div id="detail-view">
+    <div class="detail-header">
+        <span id="detail-count" style="font-weight: 800; color: var(--accent);"></span>
+        <span onclick="closeDetail()" style="font-size: 35px; cursor: pointer;">&times;</span>
+    </div>
+    <div class="detail-body">
+        <img id="detail-img" class="big-card-img" src="">
+        <div style="width:100%; max-width:450px;">
+            <h2 id="detail-name" style="font-size: 1.8rem; margin-bottom: 20px;"></h2>
+            <div id="detail-info" style="background:#1a1d21; border-radius:12px; padding:20px; border:1px solid var(--border);"></div>
+        </div>
+    </div>
+    <div class="footer-nav">
+        <div class="nav-btn" onclick="prevCard()">◀</div>
+        <div class="nav-btn" onclick="nextCard()">▶</div>
     </div>
 </div>
 
@@ -44,91 +81,81 @@
     const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     let masterCards = [];
+    let currentIdx = 0;
 
     async function init() {
         const { data: series } = await client.from('series').select('*').order('series');
         const bar = document.getElementById('series-bar');
         
         const allTab = document.createElement('div');
-        allTab.className = 'tab active';
+        allTab.className = 'series-tab active';
         allTab.innerText = 'ALL';
-        allTab.onclick = (e) => { switchTab(e.target); loadData(null); };
+        allTab.onclick = () => { updateTab(allTab); loadContent(null); };
         bar.appendChild(allTab);
 
         series.forEach(s => {
-            const t = document.createElement('div');
-            t.className = 'tab';
-            t.innerText = s.series;
-            t.onclick = (e) => { switchTab(e.target); loadData(s.series); };
-            bar.appendChild(t);
+            const div = document.createElement('div');
+            div.className = 'series-tab';
+            div.innerText = s.series;
+            div.onclick = () => { updateTab(div); loadContent(s.series); };
+            bar.appendChild(div);
         });
-        loadData(null);
+        loadContent(null);
     }
 
-    function switchTab(target) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    function updateTab(target) {
+        document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
         target.classList.add('active');
     }
 
-    async function loadData(seriesName) {
+    async function loadContent(seriesName) {
         const area = document.getElementById('content-area');
-        area.innerHTML = '<div style="text-align:center; padding:50px;">데이터 매칭 중...</div>';
-
-        // 1. 세트 정보 로드
-        let sQ = client.from('sets').select('*');
+        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">데이터 매칭 중...</div>';
+        
+        let sQ = client.from('sets').select('*').order('releaseDate', {ascending: false});
         if(seriesName) sQ = sQ.eq('series', seriesName);
         const { data: sets } = await sQ;
 
-        // 2. 세트 슬라이더
+        // 세트 슬라이더
         const slider = document.getElementById('set-slider');
         slider.innerHTML = '';
         sets.forEach(s => {
             const div = document.createElement('div');
-            div.className = 'set-icon';
-            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}">`;
-            div.onclick = () => document.getElementById('sec-'+s.name.replace(/\s+/g, ''))?.scrollIntoView({behavior:'smooth'});
+            div.className = 'set-icon-card';
+            div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
+            div.onclick = () => document.getElementById('sec-' + s.name.replace(/\s+/g, ''))?.scrollIntoView({behavior:'smooth'});
             slider.appendChild(div);
         });
 
-        // 3. 카드 로드 (set_id가 비어있으므로 set_name 또는 set 컬럼으로 매칭 시도)
+        // 카드 로드: set_id가 비어있으니 set_name 또는 set 컬럼으로 매칭
         const setNames = sets.map(s => s.name);
+        const { data: cards } = await client.from('cards').select('*').in('set_name', setNames);
         
-        // cards 테이블의 'set_name' 또는 'set' 컬럼을 조회 (데이터 구조에 맞게 자동 선택되길 기도하며..)
-        const { data: cards, error } = await client.from('cards')
-            .select('*')
-            .in('set_name', setNames); // 만약 컬럼명이 'set'이면 .in('set', setNames)로 수정 필요
-
-        if(error || !cards || cards.length === 0) {
-            // 재시도: 컬럼명이 'set'일 경우
-            const { data: retryCards } = await client.from('cards').select('*').in('set', setNames);
-            masterCards = retryCards || [];
+        // 만약 set_name 컬럼이 아니라 'set' 컬럼일 경우를 대비한 fallback
+        if(!cards || cards.length === 0) {
+            const { data: fallbackCards } = await client.from('cards').select('*').in('set', setNames);
+            masterCards = (fallbackCards || []).sort((a,b) => a.number - b.number);
         } else {
-            masterCards = cards;
+            masterCards = cards.sort((a,b) => a.number - b.number);
         }
 
         area.innerHTML = '';
-        if(masterCards.length === 0) {
-            area.innerHTML = '<div style="text-align:center; padding:50px;">카드를 찾을 수 없습니다. (DB 컬럼 매칭 실패)</div>';
-            return;
-        }
-
-        // 4. 렌더링
         sets.forEach(set => {
-            // set_name 이나 set 컬럼으로 필터링
             const sCards = masterCards.filter(c => (c.set_name === set.name || c.set === set.name));
             if(sCards.length === 0) return;
 
             const sec = document.createElement('div');
             sec.id = 'sec-' + set.name.replace(/\s+/g, '');
-            sec.innerHTML = `<div style="padding:15px; font-weight:bold; border-bottom:1px solid #222;">${set.name}</div>`;
+            sec.innerHTML = `<div class="section-title"><img src="${set.image_symbol || ''}">${set.name}</div>`;
             const grid = document.createElement('div');
             grid.className = 'card-grid';
             
             sCards.forEach(card => {
+                const gIdx = masterCards.findIndex(c => c.id === card.id);
                 const wrap = document.createElement('div');
-                wrap.className = 'card';
-                wrap.onclick = () => openDetail(card);
-                wrap.innerHTML = `<img src="${card.image_small}" loading="lazy">`;
+                wrap.className = 'card-wrap';
+                wrap.onclick = () => openDetail(gIdx);
+                wrap.innerHTML = `<div class="card-badge">#${card.number}</div><img src="${card.image_small}" loading="lazy">`;
                 grid.appendChild(wrap);
             });
             sec.appendChild(grid);
@@ -136,14 +163,24 @@
         });
     }
 
-    function openDetail(card) {
+    function openDetail(idx) {
+        currentIdx = idx;
+        const card = masterCards[idx];
         document.getElementById('detail-img').src = card.image_large;
         document.getElementById('detail-name').innerText = card.name;
-        document.getElementById('detail').classList.add('active');
+        document.getElementById('detail-count').innerText = `CARD ${idx + 1} / ${masterCards.length}`;
+        document.getElementById('detail-info').innerHTML = `
+            <p><b>Supertype:</b> ${card.supertype}</p>
+            <p><b>HP:</b> ${card.hp || 'N/A'}</p>
+            <p><b>Rarity:</b> ${card.rarity || 'N/A'}</p>
+        `;
+        document.getElementById('detail-view').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeDetail() { document.getElementById('detail').classList.remove('active'); document.body.style.overflow = ''; }
+    function closeDetail() { document.getElementById('detail-view').classList.remove('open'); document.body.style.overflow = ''; }
+    function nextCard() { if(currentIdx < masterCards.length - 1) openDetail(currentIdx + 1); }
+    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
 
     init();
 </script>
