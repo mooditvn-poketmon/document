@@ -3,315 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT Pokemon TCG Archive</title>
+    <title>MOODIT POKEDEX ARCHIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
-            --primary-silver: #bdc3c7;
-            --dark-void: #0b0d0f;
-            --card-surface: #16181c;
-            --accent-yellow: #f1c40f;
-            --text-pure: #ffffff;
-            --text-muted: #8e8e93;
+            --primary-silver: #bdc3c7; --dark-void: #0b0d0f; --card-surface: #16181c;
+            --accent-yellow: #f1c40f; --text-pure: #ffffff; --text-muted: #8e8e93;
             --border-subtle: rgba(255, 255, 255, 0.1);
         }
+        body { background: var(--dark-void); color: var(--text-pure); font-family: 'Pretendard', sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* 네비게이션: Series 테이블 연동 */
+        nav { background: rgba(11, 13, 15, 0.98); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border-subtle); backdrop-filter: blur(15px); padding: 15px 0; }
+        .series-scroll { display: flex; overflow-x: auto; padding: 0 20px; gap: 10px; scrollbar-width: none; }
+        .tab { padding: 10px 22px; background: #1c1f24; border: 1px solid var(--border-subtle); border-radius: 40px; font-size: 0.9rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); transition: 0.3s; }
+        .tab.active { background: var(--primary-silver); color: #000; font-weight: 800; border-color: #fff; }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 550px; margin: 0 auto; padding: 20px; }
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
 
-        body {
-            background-color: var(--dark-void);
-            color: var(--text-pure);
-            font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0; padding: 0; overflow-x: hidden;
-        }
+        /* 세트 리스트: 이미지 로고/심볼 동시 활용 */
+        .set-item { background: var(--card-surface); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; cursor: pointer; border: 1px solid var(--border-subtle); }
+        .set-logo-wrapper { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 12px; }
+        .set-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .set-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 4px; }
+        .set-info span { font-size: 0.85rem; color: var(--text-muted); display: block; }
 
-        nav {
-            background: rgba(11, 13, 15, 0.98);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-subtle);
-            backdrop-filter: blur(15px);
-            padding: 16px 0;
-        }
+        /* 카드 그리드: image_small 활용 */
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .card-box { position: relative; cursor: pointer; }
+        .card-thumb { width: 100%; aspect-ratio: 250/350; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-subtle); }
+        .card-num { position: absolute; bottom: 5px; right: 5px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 3px; }
 
-        .series-scroll-container {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 0 20px;
-            gap: 12px;
-        }
+        /* 상세 모달 */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: var(--dark-void); overflow-y: auto; }
+        .modal.open { display: block; }
+        .modal-content { padding: 40px 20px; max-width: 500px; margin: 0 auto; }
+        .detail-img { width: 100%; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .stat-badge { display: inline-block; padding: 5px 12px; background: #222; border-radius: 8px; font-size: 0.9rem; margin: 5px; border: 1px solid var(--border-subtle); }
 
-        .series-tab {
-            display: inline-block;
-            padding: 10px 22px;
-            background: #1c1f24;
-            border: 1px solid var(--border-subtle);
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .series-tab.active {
-            background: var(--primary-silver);
-            color: #000;
-        }
-
-        header { padding: 30px 20px 10px; text-align: center; }
-        h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
-
-        .dex-container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 10px 20px 50px;
-        }
-
-        .card-item {
-            background: var(--card-surface);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 18px;
-            border: 1px solid var(--border-subtle);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            cursor: pointer;
-        }
-
-        .card-item img {
-            width: 110px;
-            aspect-ratio: 250/350;
-            object-fit: contain;
-            border-radius: 8px;
-            background: #000;
-        }
-
-        .card-name { font-size: 1.2rem; font-weight: 700; }
-        .card-set-name { font-size: 0.85rem; color: var(--text-muted); }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0; top: 0;
-            width: 100vw; height: 100vh;
-            background-color: var(--dark-void);
-        }
-
-        .modal.open { display: flex; flex-direction: column; }
-
-        .modal-container {
-            width: 100%;
-            max-width: 500px;
-            margin: auto;
-        }
-
-        .detail-header-fixed {
-            padding: 60px 20px 30px;
-            text-align: center;
-            background: #16181c;
-        }
-
-        .detail-header-fixed img {
-            width: 220px;
-            border-radius: 12px;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 20px;
-            font-size: 35px;
-            cursor: pointer;
-        }
-
-        .section-card {
-            background: #1a1d21;
-            border-radius: 18px;
-            padding: 22px;
-            margin-bottom: 15px;
-        }
-
-        .section-header {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: var(--primary-silver);
-            margin-bottom: 10px;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-
 <body>
 
-<nav>
-    <div class="series-scroll-container" id="series-menu">
-        <div class="series-tab active" onclick="changeSeries('ALL', this)">ALL</div>
-    </div>
-</nav>
+<nav><div class="series-scroll" id="series-tabs"></div></nav>
 
-<header>
-    <h1 id="view-title">POKÉMON ARCHIVE</h1>
-</header>
+<div class="container">
+    <section id="set-view" class="view-section active">
+        <h1 id="series-title" style="font-size: 1.8rem; margin-bottom: 25px;">Archive</h1>
+        <div id="set-list"></div>
+    </section>
 
-<div class="dex-container" id="dex-container"></div>
-
-<div id="detail-modal" class="modal">
-    <div class="modal-container">
-        <span class="close-btn" onclick="closeModal()">×</span>
-
-        <div class="detail-header-fixed">
-            <img id="detail-img">
+    <section id="card-view" class="view-section">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="showSets()" style="background:none; border:1px solid #555; color:#fff; padding:8px 15px; border-radius:10px; cursor:pointer;">← Sets</button>
+            <div id="set-symbol-small"></div>
         </div>
+        <h2 id="current-set-name" style="margin:0;"></h2>
+        <p id="current-set-count" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;"></p>
+        <div class="card-grid" id="card-list"></div>
+    </section>
+</div>
 
-        <div style="padding:20px;">
-            <div id="detail-name" style="font-size:1.8rem;font-weight:800;"></div>
-            <div id="detail-set" style="color:#aaa;"></div>
-            <div id="detail-content"></div>
-        </div>
+<div id="card-modal" class="modal">
+    <div class="modal-content">
+        <span onclick="closeModal()" style="font-size: 40px; cursor: pointer; float: right;">&times;</span>
+        <img id="modal-img" class="detail-img" src="">
+        <h2 id="modal-name" style="font-size: 2rem; margin-bottom: 10px;"></h2>
+        <div id="modal-stats"></div>
+        <div id="modal-attacks" style="margin-top: 30px;"></div>
     </div>
 </div>
 
 <script>
-const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-let currentSeries = "ALL";
-let currentPage = 0;
-const itemsPerPage = 50;
-let allCards = [];
-let isLoading = false;
-
-async function init() {
-
-    const { data, error } = await client
-        .from("cards")
-        .select("series");
-
-    if (error || !data) {
-        console.log("series load error:", error);
-        return;
-    }
-
-    // 안전하게 정리
-    const list = [...new Set(
-        data
-            .map(x => x.series)
-            .filter(v => v && v !== null && v !== "")
-    )].sort();
-
-    const menu = document.getElementById("series-menu");
-
-    // 기존 ALL 제외하고 중복 방지
-    menu.innerHTML = `<div class="series-tab active" onclick="changeSeries('ALL', this)">ALL</div>`;
-
-    list.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "series-tab";
-        div.innerText = s;
-        div.onclick = e => changeSeries(s, e.target);
-        menu.appendChild(div);
-    });
-}
-
-function changeSeries(s, el) {
-    document.querySelectorAll(".series-tab").forEach(t => t.classList.remove("active"));
-    el.classList.add("active");
-
-    currentSeries = s;
-    currentPage = 0;
-    allCards = [];
-    document.getElementById("dex-container").innerHTML = "";
-    load();
-}
-
-async function load() {
-
-    let q = client.from("cards")
-        .select("*")
-        .order("name", { ascending: true })
-        .range(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage - 1);
-
-    if (currentSeries !== "ALL") {
-        q = q.eq("series", currentSeries);
-    }
-
-    const { data } = await q;
-
-    if (!data || data.length === 0) return;
-
-    allCards = allCards.concat(data);
-
-    render(data);
-    currentPage++;
-}
-
-function render(list) {
-
-    const box = document.getElementById("dex-container");
-
-    list.forEach(c => {
-
-        const idx = allCards.findIndex(x => x.id === c.id);
-
-        const div = document.createElement("div");
-        div.className = "card-item";
-        div.onclick = () => open(idx);
-
-        div.innerHTML = `
-            <img src="${c.image_small || ''}"
-                 onerror="this.src='https://via.placeholder.com/110x154'">
-            <div>
-                <div class="card-name">${c.name}</div>
-                <div class="card-set-name">${c.set_name || ''}</div>
-            </div>
-        `;
-
-        box.appendChild(div);
-    });
-}
-
-function open(i) {
-
-    const c = allCards[i];
-
-    document.getElementById("detail-modal").classList.add("open");
-
-    document.getElementById("detail-img").src = c.image_small;
-    document.getElementById("detail-name").innerText = c.name;
-    document.getElementById("detail-set").innerText = `${c.set_name} / ${c.series}`;
-
-    let html = "";
-
-    html += `
-        <div class="section-card">
-            <div class="section-header">INFO</div>
-            HP: ${c.hp || '-'}<br>
-            TYPE: ${(c.card_types || []).join(", ")}<br>
-            SUPER: ${c.supertype || ''}
-        </div>
-    `;
-
-    if (c.attacks?.length) {
-        html += `<div class="section-card"><div class="section-header">ATTACKS</div>`;
-        c.attacks.forEach(a => {
-            html += `<div><b>${a.name}</b> ${a.damage || ''}</div>`;
+    async function init() {
+        const { data: series } = await client.from('series').select('*').order('series');
+        const tabs = document.getElementById('series-tabs');
+        series.forEach((s, idx) => {
+            const div = document.createElement('div');
+            div.className = `tab ${idx === 0 ? 'active' : ''}`;
+            div.innerText = s.series;
+            div.onclick = (e) => loadSets(s.series, e.target);
+            tabs.appendChild(div);
+            if(idx === 0) loadSets(s.series, div);
         });
-        html += `</div>`;
     }
 
-    document.getElementById("detail-content").innerHTML = html;
-}
+    async function loadSets(seriesName, el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('series-title').innerText = seriesName;
 
-function closeModal() {
-    document.getElementById("detail-modal").classList.remove("open");
-}
+        const { data: sets } = await client.from('sets').select('*').eq('series', seriesName).order('releaseDate', { ascending: false });
+        
+        const list = document.getElementById('set-list');
+        list.innerHTML = '';
+        sets.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'set-item';
+            div.onclick = () => loadCards(s);
+            div.innerHTML = `
+                <div class="set-logo-wrapper"><img class="set-logo" src="${s.image_logo || s.image_symbol}"></div>
+                <div class="set-info">
+                    <div class="set-name">${s.name}</div>
+                    <span>Released: ${s.releaseDate}</span>
+                    <span>Total: ${s.printedTotal} / ${s.total}</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        showSets();
+    }
 
-init();
+    async function loadCards(set) {
+        document.getElementById('current-set-name').innerText = set.name;
+        document.getElementById('current-set-count').innerText = `${set.total} Cards in this expansion`;
+        
+        // 💡 영인님의 CamelCase 컬럼명 반영
+        const { data: cards } = await client.from('cards').select('*').eq('set_id', set.id).order('number', { ascending: true });
+        
+        const grid = document.getElementById('card-list');
+        grid.innerHTML = '';
+        cards.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'card-box';
+            div.onclick = () => openModal(c);
+            div.innerHTML = `
+                <img class="card-thumb" src="${c.image_small}" loading="lazy">
+                <div class="card-num">#${c.number}</div>
+            `;
+            grid.appendChild(div);
+        });
+        
+        document.getElementById('set-view').classList.remove('active');
+        document.getElementById('card-view').classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    function openModal(card) {
+        document.getElementById('modal-img').src = card.image_large;
+        document.getElementById('modal-name').innerText = card.name;
+        
+        let statsHtml = `
+            <div class="stat-badge">HP ${card.hp || 'N/A'}</div>
+            <div class="stat-badge">${card.supertype}</div>
+            <div class="stat-badge">${card.rarity || 'Common'}</div>
+        `;
+        document.getElementById('modal-stats').innerHTML = statsHtml;
+
+        let attackHtml = '<h3>Attacks</h3>';
+        if (card.attacks) {
+            card.attacks.forEach(a => {
+                attackHtml += `<div style="margin-bottom:15px;">
+                    <div style="font-weight:bold; color:var(--accent-yellow);">${a.name} ${a.damage ? '['+a.damage+']' : ''}</div>
+                    <div style="font-size:0.9rem; color:#ccc;">${a.text || ''}</div>
+                </div>`;
+            });
+        }
+        document.getElementById('modal-attacks').innerHTML = attackHtml;
+        document.getElementById('card-modal').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('card-modal').classList.remove('open'); }
+    function showSets() { document.getElementById('card-view').classList.remove('active'); document.getElementById('set-view').classList.add('active'); }
+
+    init();
 </script>
-
 </body>
 </html>
