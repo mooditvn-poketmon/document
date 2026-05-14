@@ -3,31 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT TCG MASTER</title>
+    <title>MOODIT TCG MASTER (MOBILE)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
+        
+        /* 모바일 전체 스크롤 및 기본 환경 제어 */
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        
         .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11,13,15,0.98); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); }
-        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 15px; gap: 10px; scrollbar-width: none; }
+        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 12px; gap: 10px; scrollbar-width: none; }
         .series-bar::-webkit-scrollbar, .set-slider::-webkit-scrollbar { display: none; }
-        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; cursor: pointer; color: var(--dim); }
+        
+        .series-tab { padding: 6px 16px; background: #222; border-radius: 40px; font-size: 0.85rem; white-space: nowrap; cursor: pointer; color: var(--dim); }
         .series-tab.active { background: #fff; color: #000; font-weight: bold; }
-        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+        
+        .set-icon-card { flex-shrink: 0; width: 75px; text-align: center; cursor: pointer; opacity: 0.6; }
         .set-icon-card.active { opacity: 1; font-weight: bold; }
-        .set-icon-card img { width: 60px; height: 60px; object-fit: contain; background: #000; border-radius: 12px; padding: 5px; border: 1px solid var(--border); }
-        .set-icon-card.active img { border-color: var(--accent); box-shadow: 0 0 8px rgba(241, 196, 15, 0.4); }
-        .set-icon-card span { display: block; font-size: 0.65rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .main-view { padding: 15px; min-height: 100vh; }
-        .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 40px; }
-        .card-wrap { border-radius: 8px; overflow: hidden; background: #111; aspect-ratio: 250/350; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        .set-icon-card img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 10px; padding: 3px; border: 1px solid var(--border); }
+        .set-icon-card.active img { border-color: var(--accent); }
+        .set-icon-card span { display: block; font-size: 0.6rem; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .main-view { padding: 15px; padding-bottom: 80px; }
+        .section-title { font-size: 1rem; font-weight: 800; margin: 25px 0 12px; border-left: 4px solid var(--accent); padding-left: 10px; color: #fff; }
+        
+        /* [변경 포인트] 모바일 전용 1열 배치 스타일 마킹 */
+        .card-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; align-items: center; }
+        .card-wrap { width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; background: #111; aspect-ratio: 245/342; position: relative; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; flex-direction: column; overflow-y: auto; }
+
+        /* [변경 포인트] 상세 페이지 모바일 고정 & 스크롤 분리 아키텍처 */
+        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: #050708; flex-direction: column; overflow: hidden; }
         #detail-view.open { display: flex; }
-        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000); display: flex; justify-content: center; gap: 30px; }
-        .nav-btn { background: #fff; color: #000; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; user-select: none; }
+        
+        .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(#050708, transparent); z-index: 10; }
+        
+        /* [변경 포인트] 좌우 스크롤(스와이프) 카드 뷰포트 영역 */
+        .detail-swiper-container { width: 100%; height: 42vh; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; align-items: center; }
+        .detail-swiper-container::-webkit-scrollbar { display: none; }
+        .detail-slide { flex-shrink: 0; width: 100%; display: flex; justify-content: center; align-items: center; scroll-snap-align: start; }
+        .detail-slide img { height: 38vh; max-height: 350px; aspect-ratio: 245/342; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6)); }
+
+        /* [변경 포인트] 상단 카드는 고정되고 정보 섹션만 바텀시트처럼 위로 스크롤 */
+        .detail-info-sheet { flex: 1; background: #0f1215; border-top-left-radius: 24px; border-top-right-radius: 24px; border-top: 1px solid var(--border); padding: 25px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        .detail-info-sheet h2 { margin: 0 0 15px 0; font-size: 1.4rem; font-weight: 800; color: #fff; text-align: left; }
+        .info-scroll-body { color: var(--dim); font-size: 0.95rem; line-height: 1.6; padding-bottom: 40px; }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .info-row span:first-child { color: var(--dim); font-weight: bold; }
+        .info-row span:last-child { color: #fff; }
     </style>
 </head>
 <body>
@@ -40,18 +64,16 @@
 <div class="main-view" id="content-area"></div>
 
 <div id="detail-view">
-    <div style="display:flex; justify-content:space-between; padding:20px;">
-        <span id="detail-count" style="color:var(--accent); font-weight:bold;"></span>
-        <span onclick="closeDetail()" style="font-size:35px; cursor:pointer; user-select:none;">&times;</span>
+    <div class="detail-header">
+        <span id="detail-count" style="color:var(--accent); font-weight:bold; font-size: 0.95rem;"></span>
+        <span onclick="closeDetail()" style="font-size:32px; cursor:pointer; color:#fff; user-select:none;">&times;</span>
     </div>
-    <div style="padding:20px; display:flex; flex-direction:column; align-items:center;">
-        <img id="detail-img" style="width:100%; max-width:350px; border-radius:15px;">
-        <h2 id="detail-name" style="margin:20px 0; text-align:center;"></h2>
-        <div id="detail-info" style="color:var(--dim); font-size:0.9rem; text-align:center; line-height:1.5;"></div>
-    </div>
-    <div class="footer-nav">
-        <div class="nav-btn" onclick="prevCard()">◀</div>
-        <div class="nav-btn" onclick="nextCard()">▶</div>
+    
+    <div class="detail-swiper-container" id="detail-swiper" onscroll="handleSwiperScroll()"></div>
+    
+    <div class="detail-info-sheet">
+        <h2 id="detail-name"></h2>
+        <div class="info-scroll-body" id="detail-info"></div>
     </div>
 </div>
 
@@ -62,28 +84,21 @@
 
     let masterCards = [];
     let currentIdx = 0;
+    let isSwiperScrolling = false;
 
-    // 1. 초기 실행: 시리즈 목록 로드
     async function init() {
-        // sets 테이블에서 중복 없이 유일한 시리즈 목록을 가져오거나 정렬합니다.
         const { data: setsData, error } = await client.from('sets').select('series').order('series');
-        if (error) {
-            document.getElementById('content-area').innerText = '시리즈를 불러오지 못했습니다.';
-            return;
-        }
+        if (error) return;
 
-        // 시리즈 중복 제거
         const uniqueSeries = [...new Set(setsData.map(item => item.series))].filter(Boolean);
         const bar = document.getElementById('series-bar');
         
-        // ALL 버튼 배치
         const allBtn = document.createElement('div');
         allBtn.className = 'series-tab active';
         allBtn.innerText = 'ALL';
         allBtn.onclick = () => { updateActiveTab(allBtn); loadSetsAndCards(null); };
         bar.appendChild(allBtn);
 
-        // 각각의 시리즈 탭 추가
         uniqueSeries.forEach(seriesName => {
             const t = document.createElement('div');
             t.className = 'series-tab';
@@ -92,7 +107,6 @@
             bar.appendChild(t);
         });
 
-        // 최초 진입 시 전체 로드
         loadSetsAndCards(null);
     }
 
@@ -101,19 +115,16 @@
         target.classList.add('active');
     }
 
-    // 2. 선택된 시리즈에 속한 세트 목록 로드 및 카드 연동 핵심 함수
     async function loadSetsAndCards(seriesName) {
         const area = document.getElementById('content-area');
-        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">데이터 동기화 중...</div>';
+        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim); font-size:0.9rem;">데이터 로딩 중...</div>';
         
         let query = client.from('sets').select('*').order('releaseDate', {ascending: false});
-        if (seriesName) {
-            query = query.eq('series', seriesName);
-        }
+        if (seriesName) query = query.eq('series', seriesName);
         
-        const { data: sets, error: setErr } = await query;
-        if (setErr || !sets || sets.length === 0) {
-            area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">등록된 세트 정보가 없습니다.</div>';
+        const { data: sets } = await query;
+        if (!sets || sets.length === 0) {
+            area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">세트가 없습니다.</div>';
             return;
         }
 
@@ -121,21 +132,15 @@
         await fetchAndRenderCards(sets);
     }
 
-    // 3. 상단 슬라이더 바인딩 (set_id 기반으로 작동하도록 타겟 지정)
     function renderSlider(sets) {
         const slider = document.getElementById('set-slider');
         slider.innerHTML = '';
-        
         sets.forEach((s, idx) => {
             const div = document.createElement('div');
             div.className = `set-icon-card ${idx === 0 ? 'active' : ''}`;
             div.id = 'thumb-' + s.id;
-            
-            // 이미지 로고 누락 방지 처리
-            const imgUrl = s.image_logo || s.image_symbol || 'https://via.placeholder.com/60?text=No+Img';
+            const imgUrl = s.image_logo || s.image_symbol || 'https://via.placeholder.com/50?text=No';
             div.innerHTML = `<img src="${imgUrl}"><span>${s.name}</span>`;
-            
-            // 슬라이더 아이콘 클릭 시 해당 set_id 섹션으로 스크롤 이동 및 활성화 마킹
             div.onclick = () => {
                 document.querySelectorAll('.set-icon-card').forEach(c => c.classList.remove('active'));
                 div.classList.add('active');
@@ -145,48 +150,30 @@
         });
     }
 
-    // 4. [수정 핵심] 정확하게 영인님 DB의 set_id 와 cards 테이블을 매핑하여 하단 출력
     async function fetchAndRenderCards(sets) {
         const area = document.getElementById('content-area');
         const setIds = sets.map(s => s.id);
         
-        // 멍청한 유추 로직 삭제 -> 영인님의 실제 영구 스키마 컬럼인 'set_id'로 정확히 쿼리 실행
-        const { data: cards, error: cardErr } = await client
-            .from('cards')
-            .select('*')
-            .in('set_id', setIds);
+        const { data: cards } = await client.from('cards').select('*').in('set_id', setIds);
 
-        if (cardErr) {
-            area.innerHTML = `<div style="text-align:center; padding:50px; color:red;">카드 로드 오류: ${cardErr.message}</div>`;
-            return;
-        }
-
-        // 가져온 카드들을 번호(number) 순으로 안전하게 정렬합니다.
-        masterCards = (cards || []).sort((a, b) => {
-            const numA = parseInt(a.number) || 0;
-            const numB = parseInt(b.number) || 0;
-            return numA - numB;
-        });
+        masterCards = (cards || []).sort((a, b) => (parseInt(a.number) || 0) - (parseInt(b.number) || 0));
 
         if (masterCards.length === 0) {
-            area.innerHTML = `<div style="text-align:center; padding:100px; color:var(--dim)">해당 세트(set_id)에 등록된 카드 데이터가 전부 비어있습니다.</div>`;
+            area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">카드가 없습니다.</div>';
             return;
         }
 
         area.innerHTML = '';
-        
-        // 화면에 세트별로 구역(Section)을 만들어서 뿌려줍니다.
         sets.forEach(set => {
-            // 주입 타겟: 현재 세트의 id와 카드의 set_id 매칭
             const sCards = masterCards.filter(c => c.set_id === set.id);
-            if (sCards.length === 0) return; // 카드가 없으면 구역 생성 패스
+            if (sCards.length === 0) return;
 
             const sec = document.createElement('div');
             sec.id = 'sec-' + set.id;
-            sec.innerHTML = `<div class="section-title">${set.name} (${sCards.length}장)</div>`;
+            sec.innerHTML = `<div class="section-title">${set.name} (${sCards.length})</div>`;
             
             const grid = document.createElement('div');
-            grid.className = 'card-grid';
+            grid.className = 'card-grid'; // 1열 수직 배열 컴포넌트
             
             sCards.forEach(card => {
                 const gIdx = masterCards.findIndex(c => c.id === card.id);
@@ -194,17 +181,16 @@
                 wrap.className = 'card-wrap';
                 wrap.onclick = () => openDetail(gIdx);
                 
-                // 이미지가 null일 경우 대안 주소 처리
+                // 메인 리스트 영역: 요청하신 image_small을 우선 연동
                 const cardImg = card.image_small || card.image_large || 'https://via.placeholder.com/250x350?text=No+Image';
-                wrap.innerHTML = `<img src="${cardImg}" loading="lazy" alt="${card.name || 'Pokemon Card'}">`;
+                wrap.innerHTML = `<img src="${cardImg}" loading="lazy" alt="Card">`;
                 grid.appendChild(wrap);
             });
-            
             sec.appendChild(grid);
             area.appendChild(sec);
         });
 
-        // 스크롤 시 상단 슬라이더 아이콘 상태 업데이트해주는 인터섹션 감지 추가 (선택 사항 - UI 최적화)
+        // 인터섹션 관찰 (상단 슬라이더 싱크용)
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if(entry.isIntersecting) {
@@ -213,7 +199,7 @@
                     document.getElementById('thumb-' + setId)?.classList.add('active');
                 }
             });
-        }, { threshold: 0.2 });
+        }, { threshold: 0.1 });
 
         sets.forEach(set => {
             const el = document.getElementById('sec-' + set.id);
@@ -221,39 +207,73 @@
         });
     }
 
-    // 5. 모달 상세 보기 로직 보정 (레듈레이션 마크 및 부가정보 바인딩)
+    // 6. 상세페이지 구현: 마스터 카드를 슬라이드로 사전 빌드하여 유연한 스와이프 구현
     function openDetail(idx) {
         currentIdx = idx;
-        const card = masterCards[idx];
-        
-        const imgEl = document.getElementById('detail-img');
-        imgEl.src = card.image_large || card.image_small || 'https://via.placeholder.com/350x490?text=No+Image';
-        
-        document.getElementById('detail-name').innerText = card.name || '이름 없음';
-        document.getElementById('detail-count').innerText = `${idx + 1} / ${masterCards.length}`;
-        
-        // 상세 데이터 정보 텍스트 구성
-        let infoHtml = `
-            <div><strong>ID:</strong> ${card.id} | <strong>No.</strong> ${card.number || 'N/A'}</div>
-            <div><strong>Rarity:</strong> ${card.rarity || 'N/A'} | <strong>HP:</strong> ${card.hp || 'N/A'}</div>
-            ${card.regulationMark ? `<div><strong>Regulation:</strong> ${card.regulationMark}</div>` : ''}
-            ${card.artist ? `<div style="margin-top:5px;"><small>Artist: ${card.artist}</small></div>` : ''}
-        `;
-        document.getElementById('detail-info').innerHTML = infoHtml;
-        
-        document.getElementById('detail-view').classList.add('open');
+        const swiper = document.getElementById('detail-view');
+        swiper.classList.add('open');
         document.body.style.overflow = 'hidden';
+
+        const swiperContainer = document.getElementById('detail-swiper');
+        swiperContainer.innerHTML = '';
+
+        // 마스터 카드 전체를 슬라이드로 생성하여 좌우 스크롤 연동
+        masterCards.forEach((card, i) => {
+            const slide = document.createElement('div');
+            slide.className = 'detail-slide';
+            const imgUrl = card.image_large || card.image_small || 'https://via.placeholder.com/350x490?text=No+Image';
+            slide.innerHTML = `<img src="${imgUrl}" alt="large-card">`;
+            swiperContainer.appendChild(slide);
+        });
+
+        // 선택한 인덱스로 가로 스크롤 위치 즉시 강제 수동 동기화
+        const clientWidth = window.innerWidth;
+        swiperContainer.scrollLeft = idx * clientWidth;
+
+        updateDetailInfo(idx);
     }
 
-    function closeDetail() { 
-        document.getElementById('detail-view').classList.remove('open'); 
-        document.body.style.overflow = ''; 
+    // 좌우 스와이프 발생 시 현재 어떤 카드가 보이는지 추적하는 핸들러
+    function handleSwiperScroll() {
+        const swiperContainer = document.getElementById('detail-swiper');
+        const clientWidth = window.innerWidth;
+        const newIdx = Math.round(swiperContainer.scrollLeft / clientWidth);
+        
+        if (newIdx !== currentIdx && newIdx >= 0 && newIdx < masterCards.length) {
+            currentIdx = newIdx;
+            updateDetailInfo(currentIdx);
+        }
     }
-    
-    function nextCard() { if(currentIdx < masterCards.length - 1) openDetail(currentIdx + 1); }
-    function prevCard() { if(currentIdx > 0) openDetail(currentIdx - 1); }
 
-    // 시작 부팅
+    // [핵심 조치] 카드는 움직이지 않고, 하단 정보 레이어만 내용이 갱신되어 스크롤 가능하게 분리 바인딩
+    function updateDetailInfo(idx) {
+        const card = masterCards[idx];
+        document.getElementById('detail-count').innerText = `${idx + 1} / ${masterCards.length}`;
+        document.getElementById('detail-name').innerText = card.name || '이름 없음';
+
+        // 정보 바디 렌더링 생성
+        let infoHtml = `
+            <div class="info-row"><span>ID</span> <span>${card.id}</span></div>
+            <div class="info-row"><span>Number</span> <span>${card.number || 'N/A'}</span></div>
+            <div class="info-row"><span>Supertype</span> <span>${card.supertype || 'N/A'}</span></div>
+            <div class="info-row"><span>HP</span> <span>${card.hp || 'N/A'}</span></div>
+            <div class="info-row"><span>Rarity</span> <span>${card.rarity || 'N/A'}</span></div>
+            ${card.regulationMark ? `<div class="info-row"><span>Regulation</span> <span>${card.regulationMark}</span></div>` : ''}
+            ${card.artist ? `<div class="info-row"><span>Artist</span> <span>${card.artist}</span></div>` : ''}
+            ${card.flavorText ? `<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:0.85rem; font-style:italic;">${card.flavorText}</div>` : ''}
+        `;
+        
+        const infoSheet = document.getElementById('detail-info');
+        infoSheet.innerHTML = infoHtml;
+        // 새 카드로 이동할 때 하단 텍스트 정보 스크롤 위치를 상단으로 리셋해 줍니다.
+        document.querySelector('.detail-info-sheet').scrollTop = 0;
+    }
+
+    function closeDetail() {
+        document.getElementById('detail-view').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
     init();
 </script>
 </body>
