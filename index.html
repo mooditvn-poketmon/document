@@ -11,32 +11,32 @@
             --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; }
 
         .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11, 13, 15, 0.98); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); }
         
         /* 1단 시리즈 바 */
         .series-bar { display: flex; overflow-x: auto; padding: 15px 15px 5px; gap: 10px; scrollbar-width: none; }
         .series-bar::-webkit-scrollbar { display: none; }
-        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; border: 1px solid transparent; }
+        .series-tab { padding: 8px 18px; background: #222; border-radius: 40px; font-size: 0.9rem; white-space: nowrap; color: var(--dim); cursor: pointer; }
         .series-tab.active { background: #fff; color: #000; font-weight: 800; }
 
         /* 2단 세트 슬라이더 */
-        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; }
+        .set-slider { display: flex; overflow-x: auto; padding: 10px 15px 20px; gap: 15px; scrollbar-width: none; min-height: 100px; }
         .set-slider::-webkit-scrollbar { display: none; }
-        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; opacity: 1; transition: 0.3s; }
+        .set-icon-card { flex-shrink: 0; width: 85px; text-align: center; cursor: pointer; }
         .set-icon-card img { width: 65px; height: 65px; object-fit: contain; background: #000; border-radius: 15px; padding: 8px; border: 1px solid var(--border); }
-        .set-icon-card.all-icon img { background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #000; }
+        .set-icon-card.all-icon img { background: var(--accent); display: flex; align-items: center; justify-content: center; }
         .set-icon-card span { display: block; font-size: 0.65rem; color: #fff; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .main-view { padding: 15px; }
-        .section-title { font-size: 1.1rem; font-weight: 800; margin: 25px 0 15px; padding-left: 10px; border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 10px; }
+        .main-view { padding: 15px; min-height: 80vh; }
+        .section-title { font-size: 1.1rem; font-weight: 800; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 10px; }
         .section-title img { height: 22px; object-fit: contain; }
         
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .card-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #111; }
-        .card-wrap img { width: 100%; aspect-ratio: 250/350; object-fit: cover; display: block; }
-        .card-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 4px; }
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 40px; }
+        .card-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #111; aspect-ratio: 250/350; }
+        .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 4px; z-index: 10; }
 
         /* 상세 페이지 */
         #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg); flex-direction: column; overflow-y: auto; }
@@ -45,14 +45,11 @@
         .detail-body { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
         .big-card-img { width: 100%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 30px; }
         .info-panel { width: 100%; max-width: 450px; }
-        .info-panel h2 { font-size: 1.8rem; margin: 0 0 10px; font-weight: 900; }
-        .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px; }
-        .tag { padding: 5px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border); }
         .attack-box { background: #1a1d21; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
         .atk-header { display: flex; justify-content: space-between; font-weight: 800; color: #fff; }
         .atk-desc { font-size: 0.85rem; color: var(--dim); margin-top: 5px; line-height: 1.4; }
 
-        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; }
+        .footer-nav { position: sticky; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg) 40%); display: flex; justify-content: center; gap: 30px; z-index: 10; }
         .nav-btn { background: #fff; color: #000; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -73,8 +70,8 @@
     <div class="detail-body">
         <img id="detail-img" class="big-card-img" src="">
         <div class="info-panel">
-            <h2 id="detail-name"></h2>
-            <div class="tag-row" id="detail-tags"></div>
+            <h2 id="detail-name" style="font-size: 1.8rem; margin: 0 0 10px; font-weight: 900;"></h2>
+            <div id="detail-tags" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px;"></div>
             <div id="detail-attacks"></div>
         </div>
     </div>
@@ -96,14 +93,14 @@
         const { data: series } = await client.from('series').select('*').order('series');
         const bar = document.getElementById('series-bar');
         
-        // 1단 Series 맨 앞에 ALL 추가
+        // Series [ALL]
         const allTab = document.createElement('div');
         allTab.className = 'series-tab active';
         allTab.innerText = 'ALL';
         allTab.onclick = () => {
             document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
             allTab.classList.add('active');
-            loadAllSeries();
+            loadContent(null);
         };
         bar.appendChild(allTab);
 
@@ -114,42 +111,44 @@
             div.onclick = () => {
                 document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
                 div.classList.add('active');
-                loadBySeries(s.series);
+                loadContent(s.series);
             };
             bar.appendChild(div);
         });
-        loadAllSeries();
+
+        loadContent(null);
     }
 
-    async function loadAllSeries() { loadBySeries(null); }
-
-    async function loadBySeries(seriesName) {
+    async function loadContent(seriesName) {
+        // 1. Sets 가져오기
         let setsQuery = client.from('sets').select('*').order('releaseDate', {ascending: false});
         if(seriesName) setsQuery = setsQuery.eq('series', seriesName);
-        
         const { data: sets } = await setsQuery;
+
         const slider = document.getElementById('set-slider');
         slider.innerHTML = '';
         
-        // 2단 Sets 맨 앞에 ALL 추가 (최상단으로 스크롤)
-        const allSet = document.createElement('div');
-        allSet.className = 'set-icon-card all-icon';
-        allSet.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/grid.png" style="padding:15px;"><span>ALL SETS</span>`;
-        allSet.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-        slider.appendChild(allSet);
+        // Sets [ALL]
+        const allSetIcon = document.createElement('div');
+        allSetIcon.className = 'set-icon-card all-icon';
+        allSetIcon.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/000000/grid.png"><span>ALL</span>`;
+        allSetIcon.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        slider.appendChild(allSetIcon);
 
         sets.forEach(s => {
             const div = document.createElement('div');
             div.className = 'set-icon-card';
             div.innerHTML = `<img src="${s.image_logo || s.image_symbol}"><span>${s.name}</span>`;
             div.onclick = () => {
-                const target = document.getElementById(s.id);
+                const target = document.getElementById('sec-' + s.id);
                 if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
             slider.appendChild(div);
         });
 
-        const { data: cards } = await client.from('cards').select('*').in('set_id', sets.map(s => s.id)).order('set_id').order('number', {ascending: true});
+        // 2. Cards 가져오기
+        const setIds = sets.map(s => s.id);
+        const { data: cards } = await client.from('cards').select('*').in('set_id', setIds).order('set_id').order('number', {ascending: true});
         masterCards = cards;
         
         const area = document.getElementById('content-area');
@@ -160,8 +159,8 @@
             if(setCards.length === 0) return;
 
             const section = document.createElement('div');
-            section.id = set.id;
-            section.innerHTML = `<div class="section-title"><img src="${set.image_symbol}">${set.name}</div>`;
+            section.id = 'sec-' + set.id; // ID 겹침 방지
+            section.innerHTML = `<div class="section-title"><img src="${set.image_symbol || ''}">${set.name}</div>`;
             
             const grid = document.createElement('div');
             grid.className = 'card-grid';
@@ -181,10 +180,16 @@
     function openDetail(idx) {
         currentIdx = idx;
         const card = masterCards[currentIdx];
+        if(!card) return;
+
         document.getElementById('detail-img').src = card.image_large;
         document.getElementById('detail-name').innerText = card.name;
         document.getElementById('detail-count').innerText = `CARD ${currentIdx + 1} / ${masterCards.length}`;
-        document.getElementById('detail-tags').innerHTML = `<div class="tag">${card.supertype}</div><div class="tag">${card.hp || 'N/A'} HP</div><div class="tag">${card.rarity || 'Common'}</div>`;
+        
+        document.getElementById('detail-tags').innerHTML = `
+            <div style="padding: 5px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border);">${card.supertype}</div>
+            <div style="padding: 5px 12px; background: #222; border-radius: 6px; font-size: 0.8rem; color: var(--accent); border: 1px solid var(--border);">${card.hp || 'N/A'} HP</div>
+        `;
 
         let atkHtml = '';
         if(card.attacks) {
