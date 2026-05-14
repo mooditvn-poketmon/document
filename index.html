@@ -3,77 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOODIT POKEDEX ARCHIVE</title>
+    <title>MOODIT TCG MASTER VIEW</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --primary-silver: #bdc3c7; --dark-void: #0b0d0f; --card-surface: #16181c;
-            --accent-yellow: #f1c40f; --text-pure: #ffffff; --text-muted: #8e8e93;
-            --border-subtle: rgba(255, 255, 255, 0.1);
+            --dark-bg: #0b0d0f; --panel-bg: #16181c; --accent: #f1c40f;
+            --text: #ffffff; --text-dim: #8e8e93; --border: rgba(255,255,255,0.1);
         }
-        body { background: var(--dark-void); color: var(--text-pure); font-family: 'Pretendard', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background: var(--dark-bg); color: var(--text); font-family: 'Pretendard', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+        /* 상단 고정 헤더 영역 (2단 배치) */
+        header { flex-shrink: 0; border-bottom: 1px solid var(--border); background: rgba(11,13,15,0.95); backdrop-filter: blur(10px); }
         
-        /* 네비게이션: Series 테이블 연동 */
-        nav { background: rgba(11, 13, 15, 0.98); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border-subtle); backdrop-filter: blur(15px); padding: 15px 0; }
-        .series-scroll { display: flex; overflow-x: auto; padding: 0 20px; gap: 10px; scrollbar-width: none; }
-        .tab { padding: 10px 22px; background: #1c1f24; border: 1px solid var(--border-subtle); border-radius: 40px; font-size: 0.9rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); transition: 0.3s; }
-        .tab.active { background: var(--primary-silver); color: #000; font-weight: 800; border-color: #fff; }
+        .filter-row { display: flex; align-items: center; padding: 10px 20px; gap: 15px; border-bottom: 1px solid var(--border); }
+        .row-label { font-size: 0.7rem; font-weight: 800; color: var(--accent); min-width: 50px; text-transform: uppercase; }
+        
+        .scroll-container { display: flex; overflow-x: auto; gap: 8px; scrollbar-width: none; flex: 1; }
+        .scroll-container::-webkit-scrollbar { display: none; }
 
-        .container { max-width: 550px; margin: 0 auto; padding: 20px; }
-        .view-section { display: none; animation: fadeIn 0.4s ease; }
-        .view-section.active { display: block; }
+        .item-tab { padding: 6px 16px; background: #222; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; color: var(--text-dim); transition: 0.2s; }
+        .item-tab.active { background: var(--text); color: #000; font-weight: bold; border-color: #fff; }
+        .set-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-        /* 세트 리스트: 이미지 로고/심볼 동시 활용 */
-        .set-item { background: var(--card-surface); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; cursor: pointer; border: 1px solid var(--border-subtle); }
-        .set-logo-wrapper { width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 12px; }
-        .set-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .set-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 4px; }
-        .set-info span { font-size: 0.85rem; color: var(--text-muted); display: block; }
-
-        /* 카드 그리드: image_small 활용 */
-        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .card-box { position: relative; cursor: pointer; }
-        .card-thumb { width: 100%; aspect-ratio: 250/350; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-subtle); }
-        .card-num { position: absolute; bottom: 5px; right: 5px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 3px; }
+        /* 메인 카드 영역 */
+        main { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; }
+        
+        .card-item { position: relative; transition: transform 0.2s; cursor: pointer; }
+        .card-item:hover { transform: translateY(-5px); }
+        .card-img { width: 100%; aspect-ratio: 250/350; object-fit: cover; border-radius: 10px; background: #111; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .card-info { font-size: 0.75rem; margin-top: 5px; text-align: center; color: var(--text-dim); }
 
         /* 상세 모달 */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: var(--dark-void); overflow-y: auto; }
-        .modal.open { display: block; }
-        .modal-content { padding: 40px 20px; max-width: 500px; margin: 0 auto; }
-        .detail-img { width: 100%; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .stat-badge { display: inline-block; padding: 5px 12px; background: #222; border-radius: 8px; font-size: 0.9rem; margin: 5px; border: 1px solid var(--border-subtle); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal { display: none; position: fixed; z-index: 2000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.9); padding: 40px 20px; }
+        .modal.open { display: flex; justify-content: center; align-items: center; }
+        .modal-content { max-width: 400px; width: 100%; text-align: center; }
+        .modal-img { width: 100%; border-radius: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<nav><div class="series-scroll" id="series-tabs"></div></nav>
+<header>
+    <div class="filter-row">
+        <div class="row-label">Series</div>
+        <div class="scroll-container" id="series-list"></div>
+    </div>
+    <div class="filter-row">
+        <div class="row-label">Sets</div>
+        <div class="scroll-container" id="set-list"></div>
+    </div>
+</header>
 
-<div class="container">
-    <section id="set-view" class="view-section active">
-        <h1 id="series-title" style="font-size: 1.8rem; margin-bottom: 25px;">Archive</h1>
-        <div id="set-list"></div>
-    </section>
-
-    <section id="card-view" class="view-section">
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <button onclick="showSets()" style="background:none; border:1px solid #555; color:#fff; padding:8px 15px; border-radius:10px; cursor:pointer;">← Sets</button>
-            <div id="set-symbol-small"></div>
+<main>
+    <div class="card-grid" id="main-grid">
         </div>
-        <h2 id="current-set-name" style="margin:0;"></h2>
-        <p id="current-set-count" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;"></p>
-        <div class="card-grid" id="card-list"></div>
-    </section>
-</div>
+</main>
 
-<div id="card-modal" class="modal">
+<div id="card-modal" class="modal" onclick="closeModal()">
     <div class="modal-content">
-        <span onclick="closeModal()" style="font-size: 40px; cursor: pointer; float: right;">&times;</span>
-        <img id="modal-img" class="detail-img" src="">
-        <h2 id="modal-name" style="font-size: 2rem; margin-bottom: 10px;"></h2>
-        <div id="modal-stats"></div>
-        <div id="modal-attacks" style="margin-top: 30px;"></div>
+        <img id="modal-img" class="modal-img" src="">
+        <h2 id="modal-name"></h2>
+        <p id="modal-desc" style="color:var(--text-dim);"></p>
     </div>
 </div>
 
@@ -84,94 +74,68 @@
 
     async function init() {
         const { data: series } = await client.from('series').select('*').order('series');
-        const tabs = document.getElementById('series-tabs');
+        const container = document.getElementById('series-list');
+        
         series.forEach((s, idx) => {
-            const div = document.createElement('div');
-            div.className = `tab ${idx === 0 ? 'active' : ''}`;
-            div.innerText = s.series;
-            div.onclick = (e) => loadSets(s.series, e.target);
-            tabs.appendChild(div);
-            if(idx === 0) loadSets(s.series, div);
+            const tab = document.createElement('div');
+            tab.className = `item-tab ${idx === 0 ? 'active' : ''}`;
+            tab.innerText = s.series;
+            tab.onclick = () => {
+                document.querySelectorAll('#series-list .item-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                loadSets(s.series);
+            };
+            container.appendChild(tab);
+            if(idx === 0) loadSets(s.series);
         });
     }
 
-    async function loadSets(seriesName, el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('series-title').innerText = seriesName;
+    // 2단 영역: 세트 목록 로드
+    async function loadSets(seriesName) {
+        const { data: sets } = await client.from('sets').select('*').eq('series', seriesName).order('releaseDate', {ascending: false});
+        const container = document.getElementById('set-list');
+        container.innerHTML = '';
 
-        const { data: sets } = await client.from('sets').select('*').eq('series', seriesName).order('releaseDate', { ascending: false });
-        
-        const list = document.getElementById('set-list');
-        list.innerHTML = '';
-        sets.forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'set-item';
-            div.onclick = () => loadCards(s);
-            div.innerHTML = `
-                <div class="set-logo-wrapper"><img class="set-logo" src="${s.image_logo || s.image_symbol}"></div>
-                <div class="set-info">
-                    <div class="set-name">${s.name}</div>
-                    <span>Released: ${s.releaseDate}</span>
-                    <span>Total: ${s.printedTotal} / ${s.total}</span>
-                </div>
-            `;
-            list.appendChild(div);
+        sets.forEach((s, idx) => {
+            const tab = document.createElement('div');
+            tab.className = `item-tab set-tab ${idx === 0 ? 'active' : ''}`;
+            tab.innerText = s.name;
+            tab.onclick = () => {
+                document.querySelectorAll('.set-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                loadCards(s.id);
+            };
+            container.appendChild(tab);
+            if(idx === 0) loadCards(s.id);
         });
-        showSets();
     }
 
-    async function loadCards(set) {
-        document.getElementById('current-set-name').innerText = set.name;
-        document.getElementById('current-set-count').innerText = `${set.total} Cards in this expansion`;
-        
-        // 💡 영인님의 CamelCase 컬럼명 반영
-        const { data: cards } = await client.from('cards').select('*').eq('set_id', set.id).order('number', { ascending: true });
-        
-        const grid = document.getElementById('card-list');
+    // 메인 영역: 개별 카드 로드 (image_small 활용)
+    async function loadCards(setId) {
+        const { data: cards } = await client.from('cards').select('*').eq('set_id', setId).order('number', {ascending: true});
+        const grid = document.getElementById('main-grid');
         grid.innerHTML = '';
+
         cards.forEach(c => {
             const div = document.createElement('div');
-            div.className = 'card-box';
-            div.onclick = () => openModal(c);
+            div.className = 'card-item';
+            div.onclick = (e) => { e.stopPropagation(); openModal(c); };
             div.innerHTML = `
-                <img class="card-thumb" src="${c.image_small}" loading="lazy">
-                <div class="card-num">#${c.number}</div>
+                <img class="card-img" src="${c.image_small}" loading="lazy">
+                <div class="card-info">#${c.number} ${c.name}</div>
             `;
             grid.appendChild(div);
         });
-        
-        document.getElementById('set-view').classList.remove('active');
-        document.getElementById('card-view').classList.add('active');
-        window.scrollTo(0,0);
     }
 
     function openModal(card) {
         document.getElementById('modal-img').src = card.image_large;
         document.getElementById('modal-name').innerText = card.name;
-        
-        let statsHtml = `
-            <div class="stat-badge">HP ${card.hp || 'N/A'}</div>
-            <div class="stat-badge">${card.supertype}</div>
-            <div class="stat-badge">${card.rarity || 'Common'}</div>
-        `;
-        document.getElementById('modal-stats').innerHTML = statsHtml;
-
-        let attackHtml = '<h3>Attacks</h3>';
-        if (card.attacks) {
-            card.attacks.forEach(a => {
-                attackHtml += `<div style="margin-bottom:15px;">
-                    <div style="font-weight:bold; color:var(--accent-yellow);">${a.name} ${a.damage ? '['+a.damage+']' : ''}</div>
-                    <div style="font-size:0.9rem; color:#ccc;">${a.text || ''}</div>
-                </div>`;
-            });
-        }
-        document.getElementById('modal-attacks').innerHTML = attackHtml;
+        document.getElementById('modal-desc').innerText = `${card.supertype} - ${card.rarity || ''}`;
         document.getElementById('card-modal').classList.add('open');
     }
 
     function closeModal() { document.getElementById('card-modal').classList.remove('open'); }
-    function showSets() { document.getElementById('card-view').classList.remove('active'); document.getElementById('set-view').classList.add('active'); }
 
     init();
 </script>
