@@ -11,10 +11,10 @@
             --surface: #111316;
             --surface2: #1a1d22;
             --border: rgba(255,255,255,0.07);
-            --border2: rgba(255,255,255,0.13);
+            --border2: rgba(255,255,255,0.14);
             --text: #f0f0f0;
             --muted: #6b6f78;
-            --dim: #3d4049;
+            --dim: #2e3139;
             --accent: #f1c40f;
             --accent-dim: rgba(241,196,15,0.12);
         }
@@ -38,12 +38,8 @@
             border-bottom: 1px solid var(--border);
         }
 
-        /* Platform tabs — EN / JP / TC / Pocket */
-        .platform-bar {
-            display: flex;
-            padding: 12px 14px 0;
-            gap: 6px;
-        }
+        /* Platform tabs */
+        .platform-bar { display: flex; padding: 12px 14px 0; gap: 6px; }
         .platform-tab {
             flex: 1;
             padding: 8px 4px 7px;
@@ -62,11 +58,11 @@
         .platform-tab.active { background: var(--accent); border-color: var(--accent); color: #000; }
         .platform-tab .plat-icon { display: block; font-size: 1rem; margin-bottom: 2px; }
 
-        /* Series chips */
+        /* Series row */
         .series-bar {
             display: flex;
             overflow-x: auto;
-            padding: 10px 14px;
+            padding: 10px 14px 6px;
             gap: 7px;
             scrollbar-width: none;
         }
@@ -90,7 +86,7 @@
             color: var(--accent);
         }
 
-        /* Set icon slider — 모두 full opacity, 뷰포트 진입 시 하이라이트만 */
+        /* Set icon slider */
         .set-bar {
             display: flex;
             overflow-x: auto;
@@ -105,24 +101,21 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            width: 60px;
+            width: 58px;
             cursor: pointer;
         }
         .set-thumb-img {
-            width: 46px;
-            height: 46px;
-            border-radius: 10px;
+            width: 44px; height: 44px;
+            border-radius: 9px;
             border: 1.5px solid var(--border2);
             background: var(--surface);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             overflow: hidden;
             transition: border-color 0.15s;
         }
-        .set-thumb-img img { width: 38px; height: 38px; object-fit: contain; }
+        .set-thumb-img img { width: 36px; height: 36px; object-fit: contain; }
         .set-thumb span {
-            font-size: 0.56rem;
+            font-size: 0.55rem;
             font-weight: 600;
             color: var(--muted);
             text-align: center;
@@ -132,38 +125,36 @@
             width: 100%;
             transition: color 0.15s;
         }
-        .set-thumb.viewing .set-thumb-img { border-color: var(--accent); }
-        .set-thumb.viewing span { color: var(--accent); }
+        /* active = currently selected set filter */
+        .set-thumb.selected .set-thumb-img { border-color: var(--accent); background: var(--accent-dim); }
+        .set-thumb.selected span { color: var(--accent); }
+        /* viewing = scroll position highlight */
+        .set-thumb.viewing .set-thumb-img { border-color: rgba(241,196,15,0.5); }
 
         /* ── MAIN ── */
         .main { padding: 0 0 60px; }
-
-        .section-wrap { margin-bottom: 4px; }
+        .section-wrap { margin-bottom: 2px; }
         .section-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 20px 14px 10px;
+            padding: 18px 14px 10px;
         }
         .section-line { width: 3px; height: 17px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
-        .section-title { font-size: 0.9rem; font-weight: 800; color: var(--text); letter-spacing: 0.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .section-title { font-size: 0.9rem; font-weight: 800; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .set-count-badge {
-            font-size: 0.68rem;
-            color: var(--muted);
+            font-size: 0.67rem; color: var(--muted);
             background: var(--surface2);
-            padding: 2px 8px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            white-space: nowrap;
-            flex-shrink: 0;
+            padding: 2px 8px; border-radius: 20px;
+            border: 1px solid var(--border); white-space: nowrap; flex-shrink: 0;
         }
 
-        /* ★ 가로 스크롤 카드 행 */
+        /* ★ 가로 스크롤 카드 행 — 카드 더 크게 */
         .card-row {
             display: flex;
             overflow-x: auto;
-            padding: 2px 14px 14px;
-            gap: 10px;
+            padding: 2px 14px 16px;
+            gap: 12px;
             scrollbar-width: none;
             scroll-snap-type: x proximity;
             -webkit-overflow-scrolling: touch;
@@ -171,162 +162,137 @@
         .card-row::-webkit-scrollbar { display: none; }
         .card-wrap {
             flex-shrink: 0;
-            width: 150px;
+            width: 200px;
             aspect-ratio: 245 / 342;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             position: relative;
             background: var(--surface2);
             border: 1px solid var(--border2);
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.55);
             transition: transform 0.13s;
             scroll-snap-align: start;
         }
         .card-wrap:active { transform: scale(0.96); }
         .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .card-no {
-            position: absolute;
-            bottom: 6px;
-            right: 8px;
-            font-size: 0.6rem;
-            font-weight: 700;
+            position: absolute; bottom: 7px; right: 9px;
+            font-size: 0.62rem; font-weight: 700;
             color: rgba(255,255,255,0.5);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
         }
         .card-rarity {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            font-size: 0.56rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 20px;
-            background: rgba(0,0,0,0.65);
-            color: var(--accent);
+            position: absolute; top: 7px; left: 7px;
+            font-size: 0.58rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 20px;
+            background: rgba(0,0,0,0.65); color: var(--accent);
             backdrop-filter: blur(4px);
         }
 
-        /* Infinite scroll trigger */
+        /* Infinite scroll */
         #load-trigger { height: 1px; }
-        .load-status { text-align: center; padding: 18px; font-size: 0.78rem; color: var(--muted); display: none; }
+        .load-status { text-align: center; padding: 20px; font-size: 0.78rem; color: var(--muted); display: none; }
 
         /* ── DETAIL OVERLAY ── */
         #detail-view {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 900;
-            background: #06080a;
-            flex-direction: column;
-            overflow: hidden;
+            display: none; position: fixed; inset: 0; z-index: 900;
+            background: #06080a; flex-direction: column; overflow: hidden;
         }
         #detail-view.open { display: flex; }
 
         .detail-topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px 8px;
-            flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px 8px; flex-shrink: 0;
         }
         .detail-counter { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
         .detail-close {
-            width: 34px; height: 34px;
-            border-radius: 50%;
-            background: var(--surface2);
-            border: 1px solid var(--border2);
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--surface2); border: 1px solid var(--border2);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            font-size: 1.1rem;
-            color: var(--text);
+            cursor: pointer; font-size: 1.1rem; color: var(--text);
         }
 
-        /* ★ 카드 상세 좌우 스와이프 */
+        /* Card swiper */
         .detail-swiper {
-            width: 100%;
-            flex-shrink: 0;
-            height: 44vh;
-            display: flex;
-            overflow-x: auto;
+            width: 100%; flex-shrink: 0; height: 46vh;
+            display: flex; overflow-x: auto;
             scroll-snap-type: x mandatory;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; -webkit-overflow-scrolling: touch;
         }
         .detail-swiper::-webkit-scrollbar { display: none; }
         .detail-slide {
-            flex-shrink: 0;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-shrink: 0; width: 100%;
+            display: flex; align-items: center; justify-content: center;
             scroll-snap-align: start;
         }
         .detail-slide img {
-            height: 40vh;
-            max-height: 340px;
-            aspect-ratio: 245 / 342;
-            object-fit: contain;
+            height: 42vh; max-height: 360px;
+            aspect-ratio: 245 / 342; object-fit: contain;
             border-radius: 14px;
-            filter: drop-shadow(0 10px 22px rgba(0,0,0,0.75));
+            filter: drop-shadow(0 10px 24px rgba(0,0,0,0.8));
+            cursor: zoom-in;
+            transition: transform 0.15s;
         }
+        .detail-slide img:active { transform: scale(0.97); }
 
         .swipe-hint {
-            text-align: center;
-            font-size: 0.66rem;
-            color: var(--dim);
-            padding: 5px 0 2px;
-            flex-shrink: 0;
-            letter-spacing: 0.04em;
+            text-align: center; font-size: 0.66rem; color: var(--dim);
+            padding: 5px 0 2px; flex-shrink: 0; letter-spacing: 0.04em;
         }
 
         /* Info sheet */
         .info-sheet {
-            flex: 1;
-            background: #0e1014;
-            border-top-left-radius: 22px;
-            border-top-right-radius: 22px;
+            flex: 1; background: #0e1014;
+            border-top-left-radius: 22px; border-top-right-radius: 22px;
             border-top: 1px solid var(--border2);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-top: 6px;
+            overflow-y: auto; -webkit-overflow-scrolling: touch; margin-top: 6px;
         }
         .info-inner { padding: 20px 18px 50px; }
         .detail-card-name { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 6px; letter-spacing: -0.01em; }
         .detail-set-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--muted);
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            padding: 3px 10px;
-            border-radius: 20px;
-            margin-bottom: 16px;
+            display: inline-block; font-size: 0.7rem; font-weight: 600;
+            color: var(--muted); background: var(--surface2);
+            border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; margin-bottom: 16px;
         }
         .info-rows { display: flex; flex-direction: column; }
         .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 9px 0;
-            border-bottom: 1px solid var(--border);
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 9px 0; border-bottom: 1px solid var(--border); gap: 12px;
         }
         .info-row:last-child { border-bottom: none; }
         .info-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); flex-shrink: 0; }
         .info-val { font-size: 0.82rem; font-weight: 500; color: var(--text); text-align: right; word-break: break-word; }
         .flavor-box {
-            margin-top: 14px;
-            padding: 13px 15px;
-            background: var(--surface2);
-            border-radius: 11px;
-            border: 1px solid var(--border);
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.65;
-            font-style: italic;
+            margin-top: 14px; padding: 13px 15px;
+            background: var(--surface2); border-radius: 11px; border: 1px solid var(--border);
+            font-size: 0.8rem; color: var(--muted); line-height: 1.65; font-style: italic;
         }
+
+        /* ── CARD ZOOM LIGHTBOX ── */
+        #zoom-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1100;
+            background: rgba(0,0,0,0.92);
+            align-items: center; justify-content: center;
+            cursor: zoom-out;
+        }
+        #zoom-overlay.open { display: flex; }
+        #zoom-img {
+            max-width: 92vw; max-height: 92vh;
+            aspect-ratio: 245 / 342; object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+            animation: zoomIn 0.2s ease;
+        }
+        @keyframes zoomIn { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        #zoom-close {
+            position: absolute; top: 18px; right: 18px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: #fff; cursor: pointer;
+        }
+
         .state-msg { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
     </style>
 </head>
@@ -349,13 +315,14 @@
     <div class="load-status" id="load-status">불러오는 중…</div>
 </div>
 
+<!-- Detail view -->
 <div id="detail-view">
     <div class="detail-topbar">
         <span class="detail-counter" id="detail-counter"></span>
         <div class="detail-close" onclick="closeDetail()">✕</div>
     </div>
     <div class="detail-swiper" id="detail-swiper"></div>
-    <div class="swipe-hint">← 좌우로 넘기세요 →</div>
+    <div class="swipe-hint">← 좌우로 넘기세요  •  이미지 탭하면 확대 →</div>
     <div class="info-sheet">
         <div class="info-inner">
             <div class="detail-card-name" id="detail-name"></div>
@@ -364,6 +331,12 @@
             <div class="flavor-box" id="detail-flavor" style="display:none"></div>
         </div>
     </div>
+</div>
+
+<!-- Zoom lightbox -->
+<div id="zoom-overlay" onclick="closeZoom()">
+    <div id="zoom-close">✕</div>
+    <img id="zoom-img" src="" alt="">
 </div>
 
 <script>
@@ -378,19 +351,29 @@ const CFG = {
     pocket: { sets:'pocket_sets', cards:'pocket_cards', setImg:'set_img_url', setName:'set_name', setFull:'set_full_name', setDate:'release_date', series:'series', cardNum:'card_number', cardImg:'image_url', cardName:'name', rarity:'rarity', hp:'hp', artist:'author', flavor:null, supertype:null, regulation:null, setFK:'set_id' }
 };
 
-let curPlat = 'en';
-let allSets = [];
-let filteredSets = [];
-let masterCards = [];
-let targetSets = [];
-let setIdx = 0;
-let offset = 0;
-const PAGE = 30;
-let hasMore = true;
-let loading = false;
-let curDetailIdx = 0;
-let swiperTimer = null;
+// ── State ──────────────────────────────────────
+let curPlat       = 'en';
+let allSets       = [];      // 플랫폼 전체 세트
+let filteredSets  = [];      // 현재 필터된 세트 목록 (렌더 대상)
+let masterCards   = [];      // 로드된 카드 풀
 
+// 필터 상태 (시리즈 OR 특정 세트 중 하나만 활성)
+let activeSeries  = null;    // null = ALL
+let activeSetId   = null;    // null = 시리즈 전체
+
+// Paging
+let targetSets    = [];
+let setIdx        = 0;
+let offset        = 0;
+const PAGE        = 30;
+let hasMore       = true;
+let loading       = false;
+
+// Detail
+let curDetailIdx  = 0;
+let swiperTimer   = null;
+
+// ── Init ───────────────────────────────────────
 async function init() {
     document.querySelectorAll('.platform-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -403,73 +386,148 @@ async function init() {
     });
 
     document.getElementById('detail-swiper').addEventListener('scroll', onSwiperScroll, { passive: true });
-
     setupIntersectionObserver();
     await loadPlatform();
 }
 
+// ── Load platform ──────────────────────────────
 async function loadPlatform() {
     const cfg = CFG[curPlat];
+    activeSeries = null;
+    activeSetId  = null;
     document.getElementById('series-bar').innerHTML = '';
     document.getElementById('set-bar').innerHTML = '';
     document.getElementById('content-area').innerHTML = '<div class="state-msg">불러오는 중…</div>';
 
     const { data: sets } = await sb.from(cfg.sets).select('*').order(cfg.setDate, { ascending: false });
     allSets = sets || [];
+
     buildSeriesBar();
-    filterBySeries(null);
+    applyFilter(); // ALL → 전체 로드
 }
 
+// ── Series bar ─────────────────────────────────
 function buildSeriesBar() {
     const cfg = CFG[curPlat];
     const bar = document.getElementById('series-bar');
     bar.innerHTML = '';
     const seriesList = [...new Set(allSets.map(s => s[cfg.series]).filter(Boolean))];
-    addChip(bar, 'ALL', true, () => filterBySeries(null));
-    seriesList.forEach(s => addChip(bar, s, false, () => filterBySeries(s)));
+
+    // ALL chip
+    const allChip = makeChip('ALL', activeSeries === null && activeSetId === null);
+    allChip.onclick = () => {
+        activeSeries = null;
+        activeSetId  = null;
+        syncSeriesBar();
+        syncSetBar();
+        applyFilter();
+    };
+    bar.appendChild(allChip);
+
+    seriesList.forEach(s => {
+        const chip = makeChip(s, activeSeries === s && activeSetId === null);
+        chip.dataset.series = s;
+        chip.onclick = () => {
+            activeSeries = s;
+            activeSetId  = null;   // 시리즈 선택하면 셋 선택 초기화
+            syncSeriesBar();
+            syncSetBar();
+            applyFilter();
+        };
+        bar.appendChild(chip);
+    });
 }
 
-function addChip(bar, label, active, onClick) {
+function makeChip(label, active) {
     const el = document.createElement('div');
     el.className = 'series-chip' + (active ? ' active' : '');
     el.textContent = label;
-    el.onclick = () => {
-        document.querySelectorAll('.series-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        onClick();
-    };
-    bar.appendChild(el);
+    return el;
 }
 
-function filterBySeries(series) {
-    const cfg = CFG[curPlat];
-    filteredSets = series ? allSets.filter(s => s[cfg.series] === series) : [...allSets];
-    buildSetBar();
-    resetAndLoad();
+function syncSeriesBar() {
+    document.querySelectorAll('.series-chip').forEach(c => {
+        const s = c.dataset.series;
+        if (!s) {
+            // ALL chip
+            c.classList.toggle('active', activeSeries === null && activeSetId === null);
+        } else {
+            c.classList.toggle('active', activeSeries === s && activeSetId === null);
+        }
+    });
 }
 
+// ── Set bar ────────────────────────────────────
 function buildSetBar() {
     const cfg = CFG[curPlat];
     const bar = document.getElementById('set-bar');
     bar.innerHTML = '';
-    filteredSets.forEach(s => {
+
+    // 시리즈 필터 기준으로 세트 목록 결정
+    const setsToShow = activeSeries
+        ? allSets.filter(s => s[cfg.series] === activeSeries)
+        : allSets;
+
+    setsToShow.forEach(s => {
         const el = document.createElement('div');
         el.className = 'set-thumb';
         el.id = 'thumb-' + s.id;
+        if (activeSetId === s.id) el.classList.add('selected');
+
         const imgUrl = s[cfg.setImg] || '';
-        el.innerHTML = `<div class="set-thumb-img"><img src="${imgUrl}" onerror="this.style.display='none'" alt=""></div><span>${s[cfg.setName] || ''}</span>`;
-        el.onclick = () => document.getElementById('sec-' + s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.innerHTML = `
+            <div class="set-thumb-img"><img src="${imgUrl}" onerror="this.style.display='none'" alt=""></div>
+            <span>${s[cfg.setName] || ''}</span>
+        `;
+        el.onclick = () => {
+            if (activeSetId === s.id) {
+                // 같은 세트 재클릭 → 해제 (시리즈 전체로 복귀)
+                activeSetId = null;
+            } else {
+                activeSetId = s.id;
+            }
+            syncSeriesBar();
+            syncSetBar();
+            applyFilter();
+        };
         bar.appendChild(el);
     });
 }
 
+function syncSetBar() {
+    document.querySelectorAll('.set-thumb').forEach(t => {
+        const id = parseInt(t.id.replace('thumb-', ''));
+        t.classList.toggle('selected', activeSetId === id);
+    });
+}
+
+// ── Apply filter → determine filteredSets ──────
+function applyFilter() {
+    const cfg = CFG[curPlat];
+
+    if (activeSetId !== null) {
+        // 특정 세트 선택
+        filteredSets = allSets.filter(s => s.id === activeSetId);
+    } else if (activeSeries !== null) {
+        // 시리즈 전체
+        filteredSets = allSets.filter(s => s[cfg.series] === activeSeries);
+    } else {
+        // ALL
+        filteredSets = [...allSets];
+    }
+
+    buildSetBar();   // 세트바는 항상 현재 시리즈 기준으로 재빌드
+    resetAndLoad();
+}
+
+// ── Paging ─────────────────────────────────────
 function resetAndLoad() {
     masterCards = [];
-    targetSets = [...filteredSets];
-    setIdx = 0;
-    offset = 0;
-    hasMore = true;
-    loading = false;
+    targetSets  = [...filteredSets];
+    setIdx      = 0;
+    offset      = 0;
+    hasMore     = true;
+    loading     = false;
     document.getElementById('content-area').innerHTML = '';
     document.getElementById('load-status').style.display = 'none';
     loadNextBatch();
@@ -511,6 +569,7 @@ async function loadNextBatch() {
     document.getElementById('load-status').style.display = 'none';
 }
 
+// ── Render ─────────────────────────────────────
 function renderCards(set, cards, startIdx) {
     const cfg = CFG[curPlat];
     const area = document.getElementById('content-area');
@@ -551,17 +610,18 @@ function renderCards(set, cards, startIdx) {
 
         const imgUrl = card[cfg.cardImg] || '';
         const rarity = card[cfg.rarity] || '';
-        const num = card[cfg.cardNum] || '';
+        const num    = card[cfg.cardNum] || '';
 
         wrap.innerHTML = `
             <img src="${imgUrl}" loading="lazy" alt="">
             ${rarity ? `<div class="card-rarity">${rarity}</div>` : ''}
-            ${num ? `<div class="card-no">${num}</div>` : ''}
+            ${num    ? `<div class="card-no">${num}</div>`        : ''}
         `;
         row.appendChild(wrap);
     });
 }
 
+// ── Observers ──────────────────────────────────
 function setupIntersectionObserver() {
     new IntersectionObserver(async (entries) => {
         if (entries[0].isIntersecting && !loading && hasMore) await loadNextBatch();
@@ -585,20 +645,30 @@ function observeSection(setId) {
     }, { threshold: 0.1 }).observe(el);
 }
 
+// ── Detail ─────────────────────────────────────
 function openDetail(idx) {
     curDetailIdx = idx;
-    const cfg = CFG[curPlat];
+    const cfg    = CFG[curPlat];
     const swiper = document.getElementById('detail-swiper');
 
     swiper.innerHTML = '';
-    masterCards.forEach(card => {
+    masterCards.forEach((card, i) => {
         const slide = document.createElement('div');
         slide.className = 'detail-slide';
-        slide.innerHTML = `<img src="${card[cfg.cardImg] || ''}" loading="lazy" alt="">`;
+        const imgUrl = card[cfg.cardImg] || '';
+        const img = document.createElement('img');
+        img.src = imgUrl;
+        img.loading = 'lazy';
+        img.alt = '';
+        // 카드 탭 → 확대
+        img.onclick = (e) => {
+            e.stopPropagation();
+            openZoom(imgUrl);
+        };
+        slide.appendChild(img);
         swiper.appendChild(slide);
     });
 
-    // 애니메이션 없이 즉시 해당 카드로 이동
     swiper.style.scrollBehavior = 'auto';
     swiper.scrollLeft = idx * swiper.offsetWidth;
     requestAnimationFrame(() => { swiper.style.scrollBehavior = ''; });
@@ -622,33 +692,33 @@ function onSwiperScroll() {
 
 function updateDetailInfo(idx) {
     const card = masterCards[idx];
-    const cfg = CFG[curPlat];
+    const cfg  = CFG[curPlat];
 
     document.getElementById('detail-counter').textContent = `${idx + 1} / ${masterCards.length}`;
-    document.getElementById('detail-name').textContent = card[cfg.cardName] || '이름 없음';
+    document.getElementById('detail-name').textContent    = card[cfg.cardName] || '이름 없음';
 
     const set = filteredSets.find(s => s.id === card[cfg.setFK]);
     document.getElementById('detail-set-badge').textContent = set ? (set[cfg.setFull] || set[cfg.setName] || '') : '';
 
     const rows = [
-        ['Number', card[cfg.cardNum]],
-        ['HP', card[cfg.hp]],
-        ['Rarity', card[cfg.rarity]],
-        cfg.supertype  ? ['Type', card[cfg.supertype]]       : null,
-        cfg.regulation ? ['Regulation', card[cfg.regulation]]: null,
-        card.stage     ? ['Stage', card.stage]               : null,
+        ['Number',     card[cfg.cardNum]],
+        ['HP',         card[cfg.hp]],
+        ['Rarity',     card[cfg.rarity]],
+        cfg.supertype   ? ['Type',       card[cfg.supertype]]        : null,
+        cfg.regulation  ? ['Regulation', card[cfg.regulation]]       : null,
+        card.stage      ? ['Stage',      card.stage]                 : null,
         (cfg.artist && card[cfg.artist]) ? ['Artist', Array.isArray(card[cfg.artist]) ? card[cfg.artist].join(', ') : card[cfg.artist]] : null,
         card.pokedex_number   ? ['Pokédex No.', '#' + card.pokedex_number] : null,
-        card.pokemon_category ? ['Category', card.pokemon_category]        : null,
-        card.height           ? ['Height', card.height]                    : null,
-        card.weight           ? ['Weight', card.weight]                    : null,
+        card.pokemon_category ? ['Category',   card.pokemon_category]      : null,
+        card.height           ? ['Height',     card.height]                : null,
+        card.weight           ? ['Weight',     card.weight]                : null,
     ].filter(r => r && r[1] !== null && r[1] !== undefined && r[1] !== '');
 
     document.getElementById('detail-rows').innerHTML = rows.map(([label, val]) =>
         `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${val}</span></div>`
     ).join('');
 
-    const flavorEl = document.getElementById('detail-flavor');
+    const flavorEl  = document.getElementById('detail-flavor');
     const flavorVal = cfg.flavor ? card[cfg.flavor] : null;
     if (flavorVal) { flavorEl.style.display = 'block'; flavorEl.textContent = flavorVal; }
     else { flavorEl.style.display = 'none'; }
@@ -659,6 +729,16 @@ function updateDetailInfo(idx) {
 function closeDetail() {
     document.getElementById('detail-view').classList.remove('open');
     document.body.style.overflow = '';
+}
+
+// ── Zoom lightbox ──────────────────────────────
+function openZoom(imgUrl) {
+    document.getElementById('zoom-img').src = imgUrl;
+    document.getElementById('zoom-overlay').classList.add('open');
+}
+function closeZoom() {
+    document.getElementById('zoom-overlay').classList.remove('open');
+    document.getElementById('zoom-img').src = '';
 }
 
 init();
