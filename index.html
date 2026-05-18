@@ -3,356 +3,760 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MOODIT TCG MASTER (LAZY LOAD)</title>
+    <title>MOODIT TCG</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0b0d0f; --accent: #f1c40f; --text: #ffffff; --dim: #8e8e93; --border: rgba(255,255,255,0.1); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-        
-        .header-fixed { position: sticky; top: 0; z-index: 1000; background: rgba(11,13,15,0.98); border-bottom: 1px solid var(--border); backdrop-filter: blur(15px); }
-        .series-bar, .set-slider { display: flex; overflow-x: auto; padding: 12px; gap: 10px; scrollbar-width: none; }
-        .series-bar::-webkit-scrollbar, .set-slider::-webkit-scrollbar { display: none; }
-        
-        .series-tab { padding: 6px 16px; background: #222; border-radius: 40px; font-size: 0.85rem; white-space: nowrap; cursor: pointer; color: var(--dim); }
-        .series-tab.active { background: #fff; color: #000; font-weight: bold; }
-        
-        .set-icon-card { flex-shrink: 0; width: 75px; text-align: center; cursor: pointer; opacity: 0.6; }
-        .set-icon-card.active { opacity: 1; font-weight: bold; }
-        .set-icon-card img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 10px; padding: 3px; border: 1px solid var(--border); }
-        .set-icon-card.active img { border-color: var(--accent); }
-        .set-icon-card span { display: block; font-size: 0.6rem; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
-        .main-view { padding: 15px; padding-bottom: 40px; }
-        .section-title { font-size: 1rem; font-weight: 800; margin: 25px 0 12px; border-left: 4px solid var(--accent); padding-left: 10px; color: #fff; }
-        
-        .card-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 10px; align-items: center; }
-        .card-wrap { width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; background: #111; aspect-ratio: 245/342; position: relative; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        :root {
+            --bg: #0a0b0d;
+            --surface: #111316;
+            --surface2: #1a1d22;
+            --border: rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.13);
+            --text: #f0f0f0;
+            --muted: #6b6f78;
+            --dim: #3d4049;
+            --accent: #f1c40f;
+            --accent-dim: rgba(241,196,15,0.12);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            background: rgba(10,11,13,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Platform tabs (EN / TC / JP / Pocket) */
+        .platform-bar {
+            display: flex;
+            padding: 14px 16px 0;
+            gap: 6px;
+        }
+        .platform-tab {
+            flex: 1;
+            padding: 8px 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-align: center;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .platform-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+        .platform-tab .plat-icon { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+
+        /* Series scroll */
+        .series-bar {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 16px;
+            gap: 8px;
+            scrollbar-width: none;
+        }
+        .series-bar::-webkit-scrollbar { display: none; }
+        .series-chip {
+            flex-shrink: 0;
+            padding: 5px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .series-chip.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Set icon slider */
+        .set-bar {
+            display: flex;
+            overflow-x: auto;
+            padding: 8px 16px 12px;
+            gap: 12px;
+            scrollbar-width: none;
+        }
+        .set-bar::-webkit-scrollbar { display: none; }
+        .set-card {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            width: 64px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.15s;
+        }
+        .set-card.active { opacity: 1; }
+        .set-card-img-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border2);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+        .set-card.active .set-card-img-wrap { border-color: var(--accent); }
+        .set-card-img-wrap img { width: 40px; height: 40px; object-fit: contain; }
+        .set-card span {
+            font-size: 0.58rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .set-card.active span { color: var(--accent); }
+
+        /* ── MAIN ── */
+        .main { padding: 8px 14px 60px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 22px 0 12px;
+        }
+        .section-header-line {
+            width: 3px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .section-header h2 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+        .section-header .set-count {
+            margin-left: auto;
+            font-size: 0.72rem;
+            color: var(--muted);
+            background: var(--surface2);
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* Card grid — single column centered */
+        .card-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .card-wrap {
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 245 / 342;
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .card-wrap:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-wrap .card-no {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            letter-spacing: 0.05em;
+        }
+        .card-rarity-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.6);
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            backdrop-filter: blur(4px);
+        }
 
-        /* 로딩 가이드 UI */
-        .loading-trigger { text-align: center; padding: 20px; color: var(--dim); font-size: 0.85rem; display: none; }
+        /* Placeholder shimmer */
+        .shimmer {
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 245 / 342;
+            border-radius: 14px;
+            background: linear-gradient(90deg, var(--surface2) 25%, #222428 50%, var(--surface2) 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
 
-        #detail-view { display: none; position: fixed; inset: 0; z-index: 2000; background: #050708; flex-direction: column; overflow: hidden; }
+        /* Infinite scroll trigger */
+        #load-trigger {
+            height: 1px;
+            margin-top: 20px;
+        }
+        .load-status {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        /* ── DETAIL OVERLAY ── */
+        #detail-view {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 900;
+            background: #06080a;
+            flex-direction: column;
+            overflow: hidden;
+        }
         #detail-view.open { display: flex; }
-        
-        .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(#050708, transparent); z-index: 10; }
-        
-        .detail-swiper-container { width: 100%; height: 42vh; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; align-items: center; }
-        .detail-swiper-container::-webkit-scrollbar { display: none; }
-        .detail-slide { flex-shrink: 0; width: 100%; display: flex; justify-content: center; align-items: center; scroll-snap-align: start; }
-        .detail-slide img { height: 38vh; max-height: 350px; aspect-ratio: 245/342; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6)); }
 
-        .detail-info-sheet { flex: 1; background: #0f1215; border-top-left-radius: 24px; border-top-right-radius: 24px; border-top: 1px solid var(--border); padding: 25px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
-        .detail-info-sheet h2 { margin: 0 0 15px 0; font-size: 1.4rem; font-weight: 800; color: #fff; text-align: left; }
-        .info-scroll-body { color: var(--dim); font-size: 0.95rem; line-height: 1.6; padding-bottom: 40px; }
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .info-row span:first-child { color: var(--dim); font-weight: bold; }
-        .info-row span:last-child { color: #fff; }
+        .detail-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            flex-shrink: 0;
+        }
+        .detail-counter {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.03em;
+        }
+        .detail-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        /* Swiper */
+        .swiper-wrap {
+            width: 100%;
+            flex-shrink: 0;
+            height: 44vh;
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+        .swiper-wrap::-webkit-scrollbar { display: none; }
+        .swiper-slide {
+            flex-shrink: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: start;
+        }
+        .swiper-slide img {
+            height: 40vh;
+            max-height: 340px;
+            aspect-ratio: 245 / 342;
+            object-fit: contain;
+            border-radius: 14px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.7));
+        }
+
+        /* Info sheet */
+        .info-sheet {
+            flex: 1;
+            background: #0e1014;
+            border-top-left-radius: 22px;
+            border-top-right-radius: 22px;
+            border-top: 1px solid var(--border2);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .info-sheet-inner { padding: 22px 20px 50px; }
+        .info-card-name {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
+        }
+        .info-set-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+        }
+        .info-rows { display: flex; flex-direction: column; }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+        .info-val {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            text-align: right;
+            word-break: break-word;
+        }
+        .flavor-box {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: var(--surface2);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.65;
+            font-style: italic;
+        }
+
+        /* Empty / error states */
+        .state-msg {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+        .state-msg strong { display: block; font-size: 1.5rem; margin-bottom: 8px; color: var(--dim); }
     </style>
 </head>
 <body>
 
-<div class="header-fixed">
-    <div class="series-bar" id="series-bar"></div>
-    <div class="set-slider" id="set-slider"></div>
-</div>
-
-<div class="main-view">
-    <div id="content-area"></div>
-    <div id="loading-block" class="loading-trigger">네트워크 연결 중... 20장 추가 로드</div>
-</div>
-
-<div id="detail-view">
-    <div class="detail-header">
-        <span id="detail-count" style="color:var(--accent); font-weight:bold; font-size: 0.95rem;"></span>
-        <span onclick="closeDetail()" style="font-size:32px; cursor:pointer; color:#fff; user-select:none;">&times;</span>
+<!-- ── HEADER ── -->
+<div class="header">
+    <div class="platform-bar" id="platform-bar">
+        <div class="platform-tab active" data-plat="en">
+            <span class="plat-icon">🇺🇸</span>EN
+        </div>
+        <div class="platform-tab" data-plat="tc">
+            <span class="plat-icon">🇹🇼</span>TC
+        </div>
+        <div class="platform-tab" data-plat="jp">
+            <span class="plat-icon">🇯🇵</span>JP
+        </div>
+        <div class="platform-tab" data-plat="pocket">
+            <span class="plat-icon">📱</span>Pocket
+        </div>
     </div>
-    
-    <div class="detail-swiper-container" id="detail-swiper" onscroll="handleSwiperScroll()"></div>
-    
-    <div class="detail-info-sheet">
-        <h2 id="detail-name"></h2>
-        <div class="info-scroll-body" id="detail-info"></div>
+    <div class="series-bar" id="series-bar"></div>
+    <div class="set-bar" id="set-bar"></div>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="main">
+    <div id="content-area"></div>
+    <div id="load-trigger"></div>
+    <div class="load-status" id="load-status" style="display:none">불러오는 중…</div>
+</div>
+
+<!-- ── DETAIL OVERLAY ── -->
+<div id="detail-view">
+    <div class="detail-topbar">
+        <span class="detail-counter" id="detail-counter"></span>
+        <div class="detail-close" onclick="closeDetail()">✕</div>
+    </div>
+    <div class="swiper-wrap" id="swiper-wrap" onscroll="onSwiperScroll()"></div>
+    <div class="info-sheet">
+        <div class="info-sheet-inner">
+            <div class="info-card-name" id="detail-name"></div>
+            <div class="info-set-badge" id="detail-set-badge"></div>
+            <div class="info-rows" id="detail-rows"></div>
+            <div id="detail-flavor" style="display:none" class="flavor-box"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    const supabaseUrl = "https://piiyexmbntafddnlszmm.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
-    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+// ── CONFIG ──────────────────────────────────────────
+const SB_URL = "https://piiyexmbntafddnlszmm.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
+const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
-    let masterCards = [];        // 현재 화면에 렌더링되어 매핑된 카드 풀
-    let currentIdx = 0;
-    
-    // 페이징 제어 변수들
-    let targetSetIds = [];       // 현재 카테고리(시리즈)에 속한 세트 ID 배열
-    let currentSetIndex = 0;     // 처리 중인 세트 번호
-    let currentOffset = 0;       // 현재 세트 내에서 스킵한 데이터 양
-    const PAGE_SIZE = 20;        // [요청 반영] 1회 로드당 20장 제한
-    let hasMoreData = true;      // 더 가져올 데이터가 있는지 판별 플래그
-    let isLoading = false;       // 네트워크 중복 호출 방지 락
+// Platform → table names
+const PLAT_CFG = {
+    en:     { sets: 'en_sets',     cards: 'en_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
+    tc:     { sets: 'tc_sets',     cards: 'tc_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
+    jp:     { sets: 'jp_sets',     cards: 'jp_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
+    pocket: { sets: 'pocket_sets', cards: 'pocket_cards', setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: null, supertype: null, regulation: null, setFK: 'set_id' }
+};
 
-    async function init() {
-        const { data: setsData, error } = await client.from('sets').select('series').order('series');
-        if (error) return;
+// ── STATE ───────────────────────────────────────────
+let curPlat = 'en';
+let curSeries = null;   // null = ALL
+let allSets = [];
+let filteredSets = [];
+let masterCards = [];
+let curDetailIdx = 0;
 
-        const uniqueSeries = [...new Set(setsData.map(item => item.series))].filter(Boolean);
-        const bar = document.getElementById('series-bar');
-        
-        const allBtn = document.createElement('div');
-        allBtn.className = 'series-tab active';
-        allBtn.innerText = 'ALL';
-        allBtn.onclick = () => { updateActiveTab(allBtn); startNewCategory(null); };
-        bar.appendChild(allBtn);
+// paging
+let targetSets = [];
+let setIdx = 0;
+let offset = 0;
+const PAGE = 20;
+let hasMore = true;
+let loading = false;
 
-        uniqueSeries.forEach(seriesName => {
-            const t = document.createElement('div');
-            t.className = 'series-tab';
-            t.innerText = seriesName;
-            t.onclick = () => { updateActiveTab(t); startNewCategory(seriesName); };
-            bar.appendChild(t);
+// ── INIT ────────────────────────────────────────────
+async function init() {
+    setupPlatTabs();
+    await loadPlatform('en');
+    setupIntersectionObserver();
+}
+
+function setupPlatTabs() {
+    document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.dataset.plat === curPlat) return;
+            document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            curPlat = tab.dataset.plat;
+            loadPlatform(curPlat);
         });
+    });
+}
 
-        startNewCategory(null);
-        setupIntersectionObserver(); // 무한 스크롤 트리거 작동 시작
+async function loadPlatform(plat) {
+    const cfg = PLAT_CFG[plat];
+    document.getElementById('series-bar').innerHTML = '';
+    document.getElementById('set-bar').innerHTML = '';
+    document.getElementById('content-area').innerHTML = '<div class="state-msg">불러오는 중…</div>';
+
+    const { data: sets } = await sb.from(cfg.sets).select('*').order(cfg.setDate, { ascending: false });
+    allSets = sets || [];
+
+    buildSeriesBar(allSets, cfg);
+    filterBySeries(null);
+}
+
+function buildSeriesBar(sets, cfg) {
+    const bar = document.getElementById('series-bar');
+    bar.innerHTML = '';
+
+    const seriesList = [...new Set(sets.map(s => s[cfg.series]).filter(Boolean))];
+
+    const allChip = mkChip('ALL', true, () => filterBySeries(null));
+    bar.appendChild(allChip);
+
+    seriesList.forEach(s => {
+        const chip = mkChip(s, false, () => filterBySeries(s));
+        bar.appendChild(chip);
+    });
+}
+
+function mkChip(label, active, onClick) {
+    const el = document.createElement('div');
+    el.className = 'series-chip' + (active ? ' active' : '');
+    el.textContent = label;
+    el.onclick = () => {
+        document.querySelectorAll('.series-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        onClick();
+    };
+    return el;
+}
+
+function filterBySeries(series) {
+    curSeries = series;
+    const cfg = PLAT_CFG[curPlat];
+    filteredSets = series ? allSets.filter(s => s[cfg.series] === series) : [...allSets];
+    buildSetBar(filteredSets, cfg);
+    resetAndLoad(filteredSets);
+}
+
+function buildSetBar(sets, cfg) {
+    const bar = document.getElementById('set-bar');
+    bar.innerHTML = '';
+    sets.forEach((s, i) => {
+        const el = document.createElement('div');
+        el.className = 'set-card' + (i === 0 ? ' active' : '');
+        el.id = 'thumb-' + s.id;
+        const imgUrl = s[cfg.setImg] || '';
+        el.innerHTML = `<div class="set-card-img-wrap"><img src="${imgUrl}" onerror="this.style.display='none'" alt=""></div><span>${s[cfg.setName] || ''}</span>`;
+        el.onclick = () => {
+            document.getElementById('sec-' + s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        bar.appendChild(el);
+    });
+}
+
+// ── PAGING ENGINE ───────────────────────────────────
+function resetAndLoad(sets) {
+    masterCards = [];
+    targetSets = sets;
+    setIdx = 0;
+    offset = 0;
+    hasMore = true;
+    loading = false;
+    document.getElementById('content-area').innerHTML = '';
+    document.getElementById('load-status').style.display = 'none';
+    loadNextBatch();
+}
+
+async function loadNextBatch() {
+    if (loading || !hasMore) return;
+    if (setIdx >= targetSets.length) { hasMore = false; return; }
+
+    loading = true;
+    document.getElementById('load-status').style.display = 'block';
+
+    const cfg = PLAT_CFG[curPlat];
+    const set = targetSets[setIdx];
+
+    const { data: cards, error } = await sb
+        .from(cfg.cards)
+        .select('*')
+        .eq(cfg.setFK, set.id)
+        .order(cfg.cardNum, { ascending: true })
+        .range(offset, offset + PAGE - 1);
+
+    if (error || !cards || cards.length === 0) {
+        setIdx++;
+        offset = 0;
+        loading = false;
+        document.getElementById('load-status').style.display = 'none';
+        await loadNextBatch();
+        return;
     }
 
-    function updateActiveTab(target) {
-        document.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
-        target.classList.add('active');
-    }
+    masterCards = masterCards.concat(cards);
+    renderCards(set, cards);
 
-    // 1. 카테고리(시리즈) 변경 시 페이징 상태값 완전 초기화 함수
-    async function startNewCategory(seriesName) {
-        const area = document.getElementById('content-area');
-        area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim); font-size:0.9rem;">초기 동기화 중...</div>';
-        
-        // 데이터 풀 전면 리셋
-        masterCards = [];
-        currentSetIndex = 0;
-        currentOffset = 0;
-        hasMoreData = true;
-        isLoading = false;
+    offset += cards.length;
+    if (cards.length < PAGE) { setIdx++; offset = 0; }
 
-        let query = client.from('sets').select('*').order('releaseDate', {ascending: false});
-        if (seriesName) query = query.eq('series', seriesName);
-        
-        const { data: sets } = await query;
-        if (!sets || sets.length === 0) {
-            area.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--dim);">세트 정보가 없습니다.</div>';
-            document.getElementById('loading-block').style.display = 'none';
-            return;
-        }
+    loading = false;
+    document.getElementById('load-status').style.display = 'none';
+}
 
-        renderSlider(sets);
-        
-        // 현재 탭에 맞는 글로벌 타겟 세트 구조체 빌드
-        targetSetIds = sets;
-        area.innerHTML = ''; // 안내문 초기화 후 20장 가져오기 진입
-        
-        await loadNextBatch20();
-    }
+// ── RENDER ──────────────────────────────────────────
+function renderCards(set, cards) {
+    const cfg = PLAT_CFG[curPlat];
+    const area = document.getElementById('content-area');
 
-    function renderSlider(sets) {
-        const slider = document.getElementById('set-slider');
-        slider.innerHTML = '';
-        sets.forEach((s, idx) => {
-            const div = document.createElement('div');
-            div.className = `set-icon-card ${idx === 0 ? 'active' : ''}`;
-            div.id = 'thumb-' + s.id;
-            const imgUrl = s.image_logo || s.image_symbol || 'https://via.placeholder.com/50?text=No';
-            div.innerHTML = `<img src="${imgUrl}"><span>${s.name}</span>`;
-            div.onclick = () => {
-                document.querySelectorAll('.set-icon-card').forEach(c => c.classList.remove('active'));
-                div.classList.add('active');
-                document.getElementById('sec-' + s.id)?.scrollIntoView({behavior:'smooth', block:'center'});
-            };
-            slider.appendChild(div);
-        });
-    }
+    let sec = document.getElementById('sec-' + set.id);
+    let grid;
 
-    // 2. [핵심 로직] 정확하게 20장씩만 잘라서 점진적으로 네트워크 호출하는 엔진
-    async function loadNextBatch20() {
-        if (isLoading || !hasMoreData) return;
-        isLoading = true;
-        document.getElementById('loading-block').style.display = 'block';
+    if (!sec) {
+        sec = document.createElement('div');
+        sec.id = 'sec-' + set.id;
 
-        if (currentSetIndex >= targetSetIds.length) {
-            hasMoreData = false;
-            document.getElementById('loading-block').style.display = 'none';
-            isLoading = false;
-            return;
-        }
-
-        // 현재 순서의 세트 정보 타겟팅
-        let currentSet = targetSetIds[currentSetIndex];
-
-        // Supabase 오프셋 페이징 쿼리 (20장 타겟팅 제한)
-        const { data: cards, error } = await client
-            .from('cards')
-            .select('*')
-            .eq('set_id', currentSet.id)
-            .order('number', { ascending: true })
-            .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-
-        if (error || !cards || cards.length === 0) {
-            // 현재 세트에 더이상 카드가 없으면 다음 세트로 이동 후 재귀 호출
-            currentSetIndex++;
-            currentOffset = 0;
-            isLoading = false;
-            await loadNextBatch20();
-            return;
-        }
-
-        // 마스터 데이터 풀에 20장 추가 추가 바인딩
-        masterCards = masterCards.concat(cards);
-        
-        renderCardsToSection(currentSet, cards);
-
-        // 오프셋 증가
-        currentOffset += cards.length;
-
-        // 만약 가져온 카드가 요청한 크기(20장)보다 작다면 이 세트는 끝난 것이므로 다음 세트로 포인터 조정
-        if (cards.length < PAGE_SIZE) {
-            currentSetIndex++;
-            currentOffset = 0;
-        }
-
-        isLoading = false;
-        document.getElementById('loading-block').style.display = 'none';
-    }
-
-    // 3. 가져온 20장의 카드 덩어리를 화면에 순차 추가 조립하는 UI 렌더러
-    function renderCardsToSection(set, newCards) {
-        const area = document.getElementById('content-area');
-        
-        // 해당 세트의 구역(Section) 돔 엘리먼트가 있는지 검사
-        let sec = document.getElementById('sec-' + set.id);
-        let grid;
-
-        if (!sec) {
-            // 구역이 최초 개설되는 경우에만 헤더 제목 타이틀을 박아줍니다.
-            sec = document.createElement('div');
-            sec.id = 'sec-' + set.id;
-            sec.innerHTML = `<div class="section-title" id="title-text-${set.id}">${set.name}</div>`;
-            
-            grid = document.createElement('div');
-            grid.className = 'card-grid';
-            grid.id = 'grid-' + set.id;
-            
-            sec.appendChild(grid);
-            area.appendChild(sec);
-        } else {
-            grid = document.getElementById('grid-' + set.id);
-        }
-
-        // 20장 순회하면서 이미지 주입 (.card-wrap 1열 모바일 전용 아키텍처)
-        newCards.forEach(card => {
-            const gIdx = masterCards.findIndex(c => c.id === card.id);
-            const wrap = document.createElement('div');
-            wrap.className = 'card-wrap';
-            wrap.onclick = () => openDetail(gIdx);
-            
-            const cardImg = card.image_small || card.image_large || 'https://via.placeholder.com/250x350?text=No+Image';
-            wrap.innerHTML = `<img src="${cardImg}" loading="lazy" alt="Card">`;
-            grid.appendChild(wrap);
-        });
-
-        // 세트별 상단 썸네일 동기화용 트리거 옵저버 세팅
-        setupSetTitleObserver(set.id);
-    }
-
-    // 4. 하단 화면 끝에 닿았을 때 자동으로 무한스크롤 이벤트 구동시키는 센서
-    function setupIntersectionObserver() {
-        const trigger = document.getElementById('loading-block');
-        const observer = new IntersectionObserver(async (entries) => {
-            if (entries[0].isIntersecting && !isLoading && hasMoreData) {
-                await loadNextBatch20();
-            }
-        }, { rootMargin: '300px' }); // 하단 도달하기 300px 전에 미리 호출하여 끊김 제거
-        
-        observer.observe(trigger);
-    }
-
-    function setupSetTitleObserver(setId) {
-        const el = document.getElementById('sec-' + setId);
-        if(!el) return;
-        
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if(entry.isIntersecting) {
-                    document.querySelectorAll('.set-icon-card').forEach(c => c.classList.remove('active'));
-                    document.getElementById('thumb-' + setId)?.classList.add('active');
-                }
-            });
-        }, { threshold: 0.05 });
-        obs.observe(el);
-    }
-
-    // 5. 상세페이지 오픈 로직 (현재 로드된 카드 풀 한정으로 스와이프 인터랙션 구현)
-    function openDetail(idx) {
-        currentIdx = idx;
-        const swiper = document.getElementById('detail-view');
-        swiper.classList.add('open');
-        document.body.style.overflow = 'hidden';
-
-        const swiperContainer = document.getElementById('detail-swiper');
-        swiperContainer.innerHTML = '';
-
-        masterCards.forEach((card) => {
-            const slide = document.createElement('div');
-            slide.className = 'detail-slide';
-            const imgUrl = card.image_large || card.image_small || 'https://via.placeholder.com/350x490?text=No+Image';
-            slide.innerHTML = `<img src="${imgUrl}" alt="large-card">`;
-            swiperContainer.appendChild(slide);
-        });
-
-        const clientWidth = window.innerWidth;
-        swiperContainer.scrollLeft = idx * clientWidth;
-
-        updateDetailInfo(idx);
-    }
-
-    function handleSwiperScroll() {
-        const swiperContainer = document.getElementById('detail-swiper');
-        const clientWidth = window.innerWidth;
-        const newIdx = Math.round(swiperContainer.scrollLeft / clientWidth);
-        
-        if (newIdx !== currentIdx && newIdx >= 0 && newIdx < masterCards.length) {
-            currentIdx = newIdx;
-            updateDetailInfo(currentIdx);
-        }
-    }
-
-    function updateDetailInfo(idx) {
-        const card = masterCards[idx];
-        document.getElementById('detail-count').innerText = `${idx + 1} / ${masterCards.length}`;
-        document.getElementById('detail-name').innerText = card.name || '이름 없음';
-
-        let infoHtml = `
-            <div class="info-row"><span>ID</span> <span>${card.id}</span></div>
-            <div class="info-row"><span>Number</span> <span>${card.number || 'N/A'}</span></div>
-            <div class="info-row"><span>Supertype</span> <span>${card.supertype || 'N/A'}</span></div>
-            <div class="info-row"><span>HP</span> <span>${card.hp || 'N/A'}</span></div>
-            <div class="info-row"><span>Rarity</span> <span>${card.rarity || 'N/A'}</span></div>
-            ${card.regulationMark ? `<div class="info-row"><span>Regulation</span> <span>${card.regulationMark}</span></div>` : ''}
-            ${card.artist ? `<div class="info-row"><span>Artist</span> <span>${card.artist}</span></div>` : ''}
-            ${card.flavorText ? `<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:0.85rem; font-style:italic;">${card.flavorText}</div>` : ''}
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        header.innerHTML = `
+            <div class="section-header-line"></div>
+            <h2>${set[cfg.setFull] || set[cfg.setName] || 'Unknown Set'}</h2>
+            <span class="set-count">${set.total_cards || '?'} cards</span>
         `;
-        
-        const infoSheet = document.getElementById('detail-info');
-        infoSheet.innerHTML = infoHtml;
-        document.querySelector('.detail-info-sheet').scrollTop = 0;
+        sec.appendChild(header);
+
+        grid = document.createElement('div');
+        grid.className = 'card-grid';
+        grid.id = 'grid-' + set.id;
+        sec.appendChild(grid);
+
+        area.appendChild(sec);
+        observeSection(set.id);
+    } else {
+        grid = document.getElementById('grid-' + set.id);
     }
 
-    function closeDetail() {
-        document.getElementById('detail-view').classList.remove('open');
-        document.body.style.overflow = '';
+    cards.forEach(card => {
+        const gIdx = masterCards.findIndex(c => c.id === card.id);
+        const wrap = document.createElement('div');
+        wrap.className = 'card-wrap';
+        wrap.onclick = () => openDetail(gIdx);
+
+        const imgUrl = card[cfg.cardImg] || '';
+        const rarity = card[cfg.rarity] || '';
+        const num = card[cfg.cardNum] || '';
+
+        wrap.innerHTML = `
+            <img src="${imgUrl}" loading="lazy" alt="${card[cfg.cardName] || ''}">
+            ${rarity ? `<div class="card-rarity-badge">${rarity}</div>` : ''}
+            ${num ? `<div class="card-no">${num}</div>` : ''}
+        `;
+        grid.appendChild(wrap);
+    });
+}
+
+// ── INTERSECTION OBSERVERS ───────────────────────────
+function setupIntersectionObserver() {
+    const trigger = document.getElementById('load-trigger');
+    new IntersectionObserver(async (entries) => {
+        if (entries[0].isIntersecting && !loading && hasMore) {
+            await loadNextBatch();
+        }
+    }, { rootMargin: '400px' }).observe(trigger);
+}
+
+function observeSection(setId) {
+    const el = document.getElementById('sec-' + setId);
+    if (!el) return;
+    new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                document.querySelectorAll('.set-card').forEach(c => c.classList.remove('active'));
+                document.getElementById('thumb-' + setId)?.classList.add('active');
+                // scroll thumb into view
+                const thumb = document.getElementById('thumb-' + setId);
+                if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        });
+    }, { threshold: 0.05 }).observe(el);
+}
+
+// ── DETAIL ──────────────────────────────────────────
+function openDetail(idx) {
+    curDetailIdx = idx;
+    const cfg = PLAT_CFG[curPlat];
+
+    const swiper = document.getElementById('swiper-wrap');
+    swiper.innerHTML = '';
+    masterCards.forEach(card => {
+        const slide = document.createElement('div');
+        slide.className = 'swiper-slide';
+        slide.innerHTML = `<img src="${card[cfg.cardImg] || ''}" alt="${card[cfg.cardName] || ''}">`;
+        swiper.appendChild(slide);
+    });
+
+    swiper.scrollLeft = idx * window.innerWidth;
+    updateDetailInfo(idx);
+
+    document.getElementById('detail-view').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function onSwiperScroll() {
+    const swiper = document.getElementById('swiper-wrap');
+    const newIdx = Math.round(swiper.scrollLeft / window.innerWidth);
+    if (newIdx !== curDetailIdx && newIdx >= 0 && newIdx < masterCards.length) {
+        curDetailIdx = newIdx;
+        updateDetailInfo(newIdx);
+    }
+}
+
+function updateDetailInfo(idx) {
+    const card = masterCards[idx];
+    const cfg = PLAT_CFG[curPlat];
+
+    document.getElementById('detail-counter').textContent = `${idx + 1} / ${masterCards.length}`;
+    document.getElementById('detail-name').textContent = card[cfg.cardName] || '이름 없음';
+
+    // find set name
+    const set = filteredSets.find(s => s.id === card[cfg.setFK]);
+    const setLabel = set ? (set[cfg.setFull] || set[cfg.setName] || '') : '';
+    document.getElementById('detail-set-badge').textContent = setLabel;
+
+    const rows = [
+        ['Number', card[cfg.cardNum]],
+        ['HP', card[cfg.hp]],
+        ['Rarity', card[cfg.rarity]],
+        cfg.supertype ? ['Type', card[cfg.supertype]] : null,
+        cfg.regulation ? ['Regulation', card[cfg.regulation]] : null,
+        card.stage ? ['Stage', card.stage] : null,
+        cfg.artist && card[cfg.artist] ? ['Artist', Array.isArray(card[cfg.artist]) ? card[cfg.artist].join(', ') : card[cfg.artist]] : null,
+        card.pokedex_number ? ['Pokédex No.', '#' + card.pokedex_number] : null,
+        card.pokemon_category ? ['Category', card.pokemon_category] : null,
+        card.height ? ['Height', card.height] : null,
+        card.weight ? ['Weight', card.weight] : null,
+    ].filter(Boolean).filter(r => r[1] !== null && r[1] !== undefined && r[1] !== '');
+
+    document.getElementById('detail-rows').innerHTML = rows.map(([label, val]) => `
+        <div class="info-row">
+            <span class="info-label">${label}</span>
+            <span class="info-val">${val}</span>
+        </div>
+    `).join('');
+
+    const flavorEl = document.getElementById('detail-flavor');
+    const flavorVal = cfg.flavor ? card[cfg.flavor] : null;
+    if (flavorVal) {
+        flavorEl.style.display = 'block';
+        flavorEl.textContent = flavorVal;
+    } else {
+        flavorEl.style.display = 'none';
     }
 
-    init();
+    document.querySelector('.info-sheet').scrollTop = 0;
+}
+
+function closeDetail() {
+    document.getElementById('detail-view').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ── START ────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
