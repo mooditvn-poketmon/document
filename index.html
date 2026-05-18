@@ -18,9 +18,7 @@
             --accent: #f1c40f;
             --accent-dim: rgba(241,196,15,0.12);
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-
         body {
             background: var(--bg);
             color: var(--text);
@@ -34,25 +32,25 @@
             position: sticky;
             top: 0;
             z-index: 500;
-            background: rgba(10,11,13,0.95);
+            background: rgba(10,11,13,0.97);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
         }
 
-        /* Platform tabs (EN / TC / JP / Pocket) */
+        /* Platform tabs — EN / JP / TC / Pocket */
         .platform-bar {
             display: flex;
-            padding: 14px 16px 0;
+            padding: 12px 14px 0;
             gap: 6px;
         }
         .platform-tab {
             flex: 1;
-            padding: 8px 4px;
+            padding: 8px 4px 7px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 10px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.04em;
             text-align: center;
@@ -61,29 +59,25 @@
             transition: all 0.18s;
             user-select: none;
         }
-        .platform-tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #000;
-        }
-        .platform-tab .plat-icon { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+        .platform-tab.active { background: var(--accent); border-color: var(--accent); color: #000; }
+        .platform-tab .plat-icon { display: block; font-size: 1rem; margin-bottom: 2px; }
 
-        /* Series scroll */
+        /* Series chips */
         .series-bar {
             display: flex;
             overflow-x: auto;
-            padding: 10px 16px;
-            gap: 8px;
+            padding: 10px 14px;
+            gap: 7px;
             scrollbar-width: none;
         }
         .series-bar::-webkit-scrollbar { display: none; }
         .series-chip {
             flex-shrink: 0;
-            padding: 5px 14px;
+            padding: 5px 13px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 40px;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             white-space: nowrap;
             cursor: pointer;
@@ -96,30 +90,27 @@
             color: var(--accent);
         }
 
-        /* Set icon slider */
+        /* Set icon slider — 모두 full opacity, 뷰포트 진입 시 하이라이트만 */
         .set-bar {
             display: flex;
             overflow-x: auto;
-            padding: 8px 16px 12px;
-            gap: 12px;
+            padding: 6px 14px 12px;
+            gap: 14px;
             scrollbar-width: none;
         }
         .set-bar::-webkit-scrollbar { display: none; }
-        .set-card {
+        .set-thumb {
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            width: 64px;
+            width: 60px;
             cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.15s;
         }
-        .set-card.active { opacity: 1; }
-        .set-card-img-wrap {
-            width: 48px;
-            height: 48px;
+        .set-thumb-img {
+            width: 46px;
+            height: 46px;
             border-radius: 10px;
             border: 1.5px solid var(--border2);
             background: var(--surface);
@@ -129,10 +120,9 @@
             overflow: hidden;
             transition: border-color 0.15s;
         }
-        .set-card.active .set-card-img-wrap { border-color: var(--accent); }
-        .set-card-img-wrap img { width: 40px; height: 40px; object-fit: contain; }
-        .set-card span {
-            font-size: 0.58rem;
+        .set-thumb-img img { width: 38px; height: 38px; object-fit: contain; }
+        .set-thumb span {
+            font-size: 0.56rem;
             font-weight: 600;
             color: var(--muted);
             text-align: center;
@@ -140,110 +130,86 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             width: 100%;
+            transition: color 0.15s;
         }
-        .set-card.active span { color: var(--accent); }
+        .set-thumb.viewing .set-thumb-img { border-color: var(--accent); }
+        .set-thumb.viewing span { color: var(--accent); }
 
         /* ── MAIN ── */
-        .main { padding: 8px 14px 60px; }
+        .main { padding: 0 0 60px; }
 
+        .section-wrap { margin-bottom: 4px; }
         .section-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 22px 0 12px;
+            padding: 20px 14px 10px;
         }
-        .section-header-line {
-            width: 3px;
-            height: 18px;
-            background: var(--accent);
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-        .section-header h2 {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--text);
-            letter-spacing: 0.01em;
-        }
-        .section-header .set-count {
-            margin-left: auto;
-            font-size: 0.72rem;
+        .section-line { width: 3px; height: 17px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+        .section-title { font-size: 0.9rem; font-weight: 800; color: var(--text); letter-spacing: 0.01em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .set-count-badge {
+            font-size: 0.68rem;
             color: var(--muted);
             background: var(--surface2);
             padding: 2px 8px;
             border-radius: 20px;
             border: 1px solid var(--border);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        /* Card grid — single column centered */
-        .card-grid {
+        /* ★ 가로 스크롤 카드 행 */
+        .card-row {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
+            overflow-x: auto;
+            padding: 2px 14px 14px;
+            gap: 10px;
+            scrollbar-width: none;
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
         }
+        .card-row::-webkit-scrollbar { display: none; }
         .card-wrap {
-            width: 100%;
-            max-width: 300px;
+            flex-shrink: 0;
+            width: 150px;
             aspect-ratio: 245 / 342;
-            border-radius: 14px;
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
             background: var(--surface2);
             border: 1px solid var(--border2);
             cursor: pointer;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
-            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            transition: transform 0.13s;
+            scroll-snap-align: start;
         }
-        .card-wrap:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .card-wrap:active { transform: scale(0.96); }
         .card-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .card-wrap .card-no {
+        .card-no {
             position: absolute;
-            bottom: 8px;
-            right: 10px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.55);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            letter-spacing: 0.05em;
-        }
-        .card-rarity-badge {
-            position: absolute;
-            top: 8px;
-            left: 8px;
+            bottom: 6px;
+            right: 8px;
             font-size: 0.6rem;
             font-weight: 700;
-            padding: 2px 7px;
+            color: rgba(255,255,255,0.5);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        }
+        .card-rarity {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            font-size: 0.56rem;
+            font-weight: 700;
+            padding: 2px 6px;
             border-radius: 20px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.65);
             color: var(--accent);
-            letter-spacing: 0.05em;
             backdrop-filter: blur(4px);
         }
 
-        /* Placeholder shimmer */
-        .shimmer {
-            width: 100%;
-            max-width: 300px;
-            aspect-ratio: 245 / 342;
-            border-radius: 14px;
-            background: linear-gradient(90deg, var(--surface2) 25%, #222428 50%, var(--surface2) 75%);
-            background-size: 400% 100%;
-            animation: shimmer 1.4s infinite;
-        }
-        @keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
-
         /* Infinite scroll trigger */
-        #load-trigger {
-            height: 1px;
-            margin-top: 20px;
-        }
-        .load-status {
-            text-align: center;
-            padding: 20px;
-            font-size: 0.8rem;
-            color: var(--muted);
-        }
+        #load-trigger { height: 1px; }
+        .load-status { text-align: center; padding: 18px; font-size: 0.78rem; color: var(--muted); display: none; }
 
         /* ── DETAIL OVERLAY ── */
         #detail-view {
@@ -261,32 +227,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 20px;
+            padding: 14px 18px 8px;
             flex-shrink: 0;
         }
-        .detail-counter {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--accent);
-            letter-spacing: 0.03em;
-        }
+        .detail-counter { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
         .detail-close {
-            width: 36px;
-            height: 36px;
+            width: 34px; height: 34px;
             border-radius: 50%;
             background: var(--surface2);
             border: 1px solid var(--border2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text);
-            line-height: 1;
         }
 
-        /* Swiper */
-        .swiper-wrap {
+        /* ★ 카드 상세 좌우 스와이프 */
+        .detail-swiper {
             width: 100%;
             flex-shrink: 0;
             height: 44vh;
@@ -294,9 +251,10 @@
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
-        .swiper-wrap::-webkit-scrollbar { display: none; }
-        .swiper-slide {
+        .detail-swiper::-webkit-scrollbar { display: none; }
+        .detail-slide {
             flex-shrink: 0;
             width: 100%;
             display: flex;
@@ -304,13 +262,22 @@
             justify-content: center;
             scroll-snap-align: start;
         }
-        .swiper-slide img {
+        .detail-slide img {
             height: 40vh;
             max-height: 340px;
             aspect-ratio: 245 / 342;
             object-fit: contain;
             border-radius: 14px;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.7));
+            filter: drop-shadow(0 10px 22px rgba(0,0,0,0.75));
+        }
+
+        .swipe-hint {
+            text-align: center;
+            font-size: 0.66rem;
+            color: var(--dim);
+            padding: 5px 0 2px;
+            flex-shrink: 0;
+            letter-spacing: 0.04em;
         }
 
         /* Info sheet */
@@ -322,198 +289,147 @@
             border-top: 1px solid var(--border2);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            margin-top: 6px;
         }
-        .info-sheet-inner { padding: 22px 20px 50px; }
-        .info-card-name {
-            font-size: 1.35rem;
-            font-weight: 800;
-            color: var(--text);
-            margin-bottom: 6px;
-            letter-spacing: -0.01em;
-        }
-        .info-set-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.72rem;
+        .info-inner { padding: 20px 18px 50px; }
+        .detail-card-name { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 6px; letter-spacing: -0.01em; }
+        .detail-set-badge {
+            display: inline-block;
+            font-size: 0.7rem;
             font-weight: 600;
             color: var(--muted);
             background: var(--surface2);
             border: 1px solid var(--border);
             padding: 3px 10px;
             border-radius: 20px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         .info-rows { display: flex; flex-direction: column; }
         .info-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 10px 0;
+            padding: 9px 0;
             border-bottom: 1px solid var(--border);
             gap: 12px;
         }
         .info-row:last-child { border-bottom: none; }
-        .info-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--muted);
-            flex-shrink: 0;
-        }
-        .info-val {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text);
-            text-align: right;
-            word-break: break-word;
-        }
+        .info-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); flex-shrink: 0; }
+        .info-val { font-size: 0.82rem; font-weight: 500; color: var(--text); text-align: right; word-break: break-word; }
         .flavor-box {
-            margin-top: 16px;
-            padding: 14px 16px;
+            margin-top: 14px;
+            padding: 13px 15px;
             background: var(--surface2);
-            border-radius: 12px;
+            border-radius: 11px;
             border: 1px solid var(--border);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: var(--muted);
             line-height: 1.65;
             font-style: italic;
         }
-
-        /* Empty / error states */
-        .state-msg {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--muted);
-            font-size: 0.88rem;
-            line-height: 1.7;
-        }
-        .state-msg strong { display: block; font-size: 1.5rem; margin-bottom: 8px; color: var(--dim); }
+        .state-msg { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
     </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
 <div class="header">
     <div class="platform-bar" id="platform-bar">
-        <div class="platform-tab active" data-plat="en">
-            <span class="plat-icon">🇺🇸</span>EN
-        </div>
-        <div class="platform-tab" data-plat="tc">
-            <span class="plat-icon">🇹🇼</span>TC
-        </div>
-        <div class="platform-tab" data-plat="jp">
-            <span class="plat-icon">🇯🇵</span>JP
-        </div>
-        <div class="platform-tab" data-plat="pocket">
-            <span class="plat-icon">📱</span>Pocket
-        </div>
+        <div class="platform-tab active" data-plat="en"><span class="plat-icon">🇺🇸</span>EN</div>
+        <div class="platform-tab" data-plat="jp"><span class="plat-icon">🇯🇵</span>JP</div>
+        <div class="platform-tab" data-plat="tc"><span class="plat-icon">🇹🇼</span>TC</div>
+        <div class="platform-tab" data-plat="pocket"><span class="plat-icon">📱</span>Pocket</div>
     </div>
     <div class="series-bar" id="series-bar"></div>
     <div class="set-bar" id="set-bar"></div>
 </div>
 
-<!-- ── MAIN CONTENT ── -->
 <div class="main">
     <div id="content-area"></div>
     <div id="load-trigger"></div>
-    <div class="load-status" id="load-status" style="display:none">불러오는 중…</div>
+    <div class="load-status" id="load-status">불러오는 중…</div>
 </div>
 
-<!-- ── DETAIL OVERLAY ── -->
 <div id="detail-view">
     <div class="detail-topbar">
         <span class="detail-counter" id="detail-counter"></span>
         <div class="detail-close" onclick="closeDetail()">✕</div>
     </div>
-    <div class="swiper-wrap" id="swiper-wrap" onscroll="onSwiperScroll()"></div>
+    <div class="detail-swiper" id="detail-swiper"></div>
+    <div class="swipe-hint">← 좌우로 넘기세요 →</div>
     <div class="info-sheet">
-        <div class="info-sheet-inner">
-            <div class="info-card-name" id="detail-name"></div>
-            <div class="info-set-badge" id="detail-set-badge"></div>
+        <div class="info-inner">
+            <div class="detail-card-name" id="detail-name"></div>
+            <div class="detail-set-badge" id="detail-set-badge"></div>
             <div class="info-rows" id="detail-rows"></div>
-            <div id="detail-flavor" style="display:none" class="flavor-box"></div>
+            <div class="flavor-box" id="detail-flavor" style="display:none"></div>
         </div>
     </div>
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────
 const SB_URL = "https://piiyexmbntafddnlszmm.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpaXlleG1ibnRhZmRkbmxzem1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODg4NjEsImV4cCI6MjA5NDE2NDg2MX0.E_i1IFdGrXGN3_qMGY_7PJ5XZsYt05q7dmTQ42D0mcw";
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
-// Platform → table names
-const PLAT_CFG = {
-    en:     { sets: 'en_sets',     cards: 'en_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
-    tc:     { sets: 'tc_sets',     cards: 'tc_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
-    jp:     { sets: 'jp_sets',     cards: 'jp_cards',     setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: 'flavor_text', supertype: 'card_type', regulation: 'regulation', setFK: 'set_id' },
-    pocket: { sets: 'pocket_sets', cards: 'pocket_cards', setImg: 'set_img_url', setName: 'set_name', setFull: 'set_full_name', setDate: 'release_date', series: 'series', cardNum: 'card_number', cardImg: 'image_url', cardName: 'name', rarity: 'rarity', hp: 'hp', artist: 'author', flavor: null, supertype: null, regulation: null, setFK: 'set_id' }
+const CFG = {
+    en:     { sets:'en_sets',     cards:'en_cards',     setImg:'set_img_url', setName:'set_name', setFull:'set_full_name', setDate:'release_date', series:'series', cardNum:'card_number', cardImg:'image_url', cardName:'name', rarity:'rarity', hp:'hp', artist:'author', flavor:'flavor_text', supertype:'card_type', regulation:'regulation', setFK:'set_id' },
+    jp:     { sets:'jp_sets',     cards:'jp_cards',     setImg:'set_img_url', setName:'set_name', setFull:'set_full_name', setDate:'release_date', series:'series', cardNum:'card_number', cardImg:'image_url', cardName:'name', rarity:'rarity', hp:'hp', artist:'author', flavor:'flavor_text', supertype:'card_type', regulation:'regulation', setFK:'set_id' },
+    tc:     { sets:'tc_sets',     cards:'tc_cards',     setImg:'set_img_url', setName:'set_name', setFull:'set_full_name', setDate:'release_date', series:'series', cardNum:'card_number', cardImg:'image_url', cardName:'name', rarity:'rarity', hp:'hp', artist:'author', flavor:'flavor_text', supertype:'card_type', regulation:'regulation', setFK:'set_id' },
+    pocket: { sets:'pocket_sets', cards:'pocket_cards', setImg:'set_img_url', setName:'set_name', setFull:'set_full_name', setDate:'release_date', series:'series', cardNum:'card_number', cardImg:'image_url', cardName:'name', rarity:'rarity', hp:'hp', artist:'author', flavor:null, supertype:null, regulation:null, setFK:'set_id' }
 };
 
-// ── STATE ───────────────────────────────────────────
 let curPlat = 'en';
-let curSeries = null;   // null = ALL
 let allSets = [];
 let filteredSets = [];
 let masterCards = [];
-let curDetailIdx = 0;
-
-// paging
 let targetSets = [];
 let setIdx = 0;
 let offset = 0;
 const PAGE = 20;
 let hasMore = true;
 let loading = false;
+let curDetailIdx = 0;
+let swiperTimer = null;
 
-// ── INIT ────────────────────────────────────────────
 async function init() {
-    setupPlatTabs();
-    await loadPlatform('en');
-    setupIntersectionObserver();
-}
-
-function setupPlatTabs() {
     document.querySelectorAll('.platform-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             if (tab.dataset.plat === curPlat) return;
             document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             curPlat = tab.dataset.plat;
-            loadPlatform(curPlat);
+            loadPlatform();
         });
     });
+
+    document.getElementById('detail-swiper').addEventListener('scroll', onSwiperScroll, { passive: true });
+
+    setupIntersectionObserver();
+    await loadPlatform();
 }
 
-async function loadPlatform(plat) {
-    const cfg = PLAT_CFG[plat];
+async function loadPlatform() {
+    const cfg = CFG[curPlat];
     document.getElementById('series-bar').innerHTML = '';
     document.getElementById('set-bar').innerHTML = '';
     document.getElementById('content-area').innerHTML = '<div class="state-msg">불러오는 중…</div>';
 
     const { data: sets } = await sb.from(cfg.sets).select('*').order(cfg.setDate, { ascending: false });
     allSets = sets || [];
-
-    buildSeriesBar(allSets, cfg);
+    buildSeriesBar();
     filterBySeries(null);
 }
 
-function buildSeriesBar(sets, cfg) {
+function buildSeriesBar() {
+    const cfg = CFG[curPlat];
     const bar = document.getElementById('series-bar');
     bar.innerHTML = '';
-
-    const seriesList = [...new Set(sets.map(s => s[cfg.series]).filter(Boolean))];
-
-    const allChip = mkChip('ALL', true, () => filterBySeries(null));
-    bar.appendChild(allChip);
-
-    seriesList.forEach(s => {
-        const chip = mkChip(s, false, () => filterBySeries(s));
-        bar.appendChild(chip);
-    });
+    const seriesList = [...new Set(allSets.map(s => s[cfg.series]).filter(Boolean))];
+    addChip(bar, 'ALL', true, () => filterBySeries(null));
+    seriesList.forEach(s => addChip(bar, s, false, () => filterBySeries(s)));
 }
 
-function mkChip(label, active, onClick) {
+function addChip(bar, label, active, onClick) {
     const el = document.createElement('div');
     el.className = 'series-chip' + (active ? ' active' : '');
     el.textContent = label;
@@ -522,37 +438,34 @@ function mkChip(label, active, onClick) {
         el.classList.add('active');
         onClick();
     };
-    return el;
+    bar.appendChild(el);
 }
 
 function filterBySeries(series) {
-    curSeries = series;
-    const cfg = PLAT_CFG[curPlat];
+    const cfg = CFG[curPlat];
     filteredSets = series ? allSets.filter(s => s[cfg.series] === series) : [...allSets];
-    buildSetBar(filteredSets, cfg);
-    resetAndLoad(filteredSets);
+    buildSetBar();
+    resetAndLoad();
 }
 
-function buildSetBar(sets, cfg) {
+function buildSetBar() {
+    const cfg = CFG[curPlat];
     const bar = document.getElementById('set-bar');
     bar.innerHTML = '';
-    sets.forEach((s, i) => {
+    filteredSets.forEach(s => {
         const el = document.createElement('div');
-        el.className = 'set-card' + (i === 0 ? ' active' : '');
+        el.className = 'set-thumb';
         el.id = 'thumb-' + s.id;
         const imgUrl = s[cfg.setImg] || '';
-        el.innerHTML = `<div class="set-card-img-wrap"><img src="${imgUrl}" onerror="this.style.display='none'" alt=""></div><span>${s[cfg.setName] || ''}</span>`;
-        el.onclick = () => {
-            document.getElementById('sec-' + s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
+        el.innerHTML = `<div class="set-thumb-img"><img src="${imgUrl}" onerror="this.style.display='none'" alt=""></div><span>${s[cfg.setName] || ''}</span>`;
+        el.onclick = () => document.getElementById('sec-' + s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         bar.appendChild(el);
     });
 }
 
-// ── PAGING ENGINE ───────────────────────────────────
-function resetAndLoad(sets) {
+function resetAndLoad() {
     masterCards = [];
-    targetSets = sets;
+    targetSets = [...filteredSets];
     setIdx = 0;
     offset = 0;
     hasMore = true;
@@ -569,7 +482,7 @@ async function loadNextBatch() {
     loading = true;
     document.getElementById('load-status').style.display = 'block';
 
-    const cfg = PLAT_CFG[curPlat];
+    const cfg = CFG[curPlat];
     const set = targetSets[setIdx];
 
     const { data: cards, error } = await sb
@@ -580,16 +493,16 @@ async function loadNextBatch() {
         .range(offset, offset + PAGE - 1);
 
     if (error || !cards || cards.length === 0) {
-        setIdx++;
-        offset = 0;
+        setIdx++; offset = 0;
         loading = false;
         document.getElementById('load-status').style.display = 'none';
         await loadNextBatch();
         return;
     }
 
+    const startIdx = masterCards.length;
     masterCards = masterCards.concat(cards);
-    renderCards(set, cards);
+    renderCards(set, cards, startIdx);
 
     offset += cards.length;
     if (cards.length < PAGE) { setIdx++; offset = 0; }
@@ -598,40 +511,40 @@ async function loadNextBatch() {
     document.getElementById('load-status').style.display = 'none';
 }
 
-// ── RENDER ──────────────────────────────────────────
-function renderCards(set, cards) {
-    const cfg = PLAT_CFG[curPlat];
+function renderCards(set, cards, startIdx) {
+    const cfg = CFG[curPlat];
     const area = document.getElementById('content-area');
 
     let sec = document.getElementById('sec-' + set.id);
-    let grid;
+    let row;
 
     if (!sec) {
         sec = document.createElement('div');
         sec.id = 'sec-' + set.id;
+        sec.className = 'section-wrap';
 
         const header = document.createElement('div');
         header.className = 'section-header';
         header.innerHTML = `
-            <div class="section-header-line"></div>
-            <h2>${set[cfg.setFull] || set[cfg.setName] || 'Unknown Set'}</h2>
-            <span class="set-count">${set.total_cards || '?'} cards</span>
+            <div class="section-line"></div>
+            <span class="section-title">${set[cfg.setFull] || set[cfg.setName] || 'Unknown'}</span>
+            <span class="set-count-badge">${set.total_cards || '?'} cards</span>
         `;
         sec.appendChild(header);
 
-        grid = document.createElement('div');
-        grid.className = 'card-grid';
-        grid.id = 'grid-' + set.id;
-        sec.appendChild(grid);
+        row = document.createElement('div');
+        row.className = 'card-row';
+        row.id = 'row-' + set.id;
+        sec.appendChild(row);
 
         area.appendChild(sec);
         observeSection(set.id);
     } else {
-        grid = document.getElementById('grid-' + set.id);
+        row = document.getElementById('row-' + set.id);
     }
 
-    cards.forEach(card => {
-        const gIdx = masterCards.findIndex(c => c.id === card.id);
+    cards.forEach((card, i) => {
+        const gIdx = startIdx + i;
         const wrap = document.createElement('div');
         wrap.className = 'card-wrap';
         wrap.onclick = () => openDetail(gIdx);
@@ -641,22 +554,18 @@ function renderCards(set, cards) {
         const num = card[cfg.cardNum] || '';
 
         wrap.innerHTML = `
-            <img src="${imgUrl}" loading="lazy" alt="${card[cfg.cardName] || ''}">
-            ${rarity ? `<div class="card-rarity-badge">${rarity}</div>` : ''}
+            <img src="${imgUrl}" loading="lazy" alt="">
+            ${rarity ? `<div class="card-rarity">${rarity}</div>` : ''}
             ${num ? `<div class="card-no">${num}</div>` : ''}
         `;
-        grid.appendChild(wrap);
+        row.appendChild(wrap);
     });
 }
 
-// ── INTERSECTION OBSERVERS ───────────────────────────
 function setupIntersectionObserver() {
-    const trigger = document.getElementById('load-trigger');
     new IntersectionObserver(async (entries) => {
-        if (entries[0].isIntersecting && !loading && hasMore) {
-            await loadNextBatch();
-        }
-    }, { rootMargin: '400px' }).observe(trigger);
+        if (entries[0].isIntersecting && !loading && hasMore) await loadNextBatch();
+    }, { rootMargin: '500px' }).observe(document.getElementById('load-trigger'));
 }
 
 function observeSection(setId) {
@@ -665,87 +574,84 @@ function observeSection(setId) {
     new IntersectionObserver((entries) => {
         entries.forEach(e => {
             if (e.isIntersecting) {
-                document.querySelectorAll('.set-card').forEach(c => c.classList.remove('active'));
-                document.getElementById('thumb-' + setId)?.classList.add('active');
-                // scroll thumb into view
+                document.querySelectorAll('.set-thumb').forEach(t => t.classList.remove('viewing'));
                 const thumb = document.getElementById('thumb-' + setId);
-                if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                if (thumb) {
+                    thumb.classList.add('viewing');
+                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
             }
         });
-    }, { threshold: 0.05 }).observe(el);
+    }, { threshold: 0.1 }).observe(el);
 }
 
-// ── DETAIL ──────────────────────────────────────────
 function openDetail(idx) {
     curDetailIdx = idx;
-    const cfg = PLAT_CFG[curPlat];
+    const cfg = CFG[curPlat];
+    const swiper = document.getElementById('detail-swiper');
 
-    const swiper = document.getElementById('swiper-wrap');
     swiper.innerHTML = '';
     masterCards.forEach(card => {
         const slide = document.createElement('div');
-        slide.className = 'swiper-slide';
-        slide.innerHTML = `<img src="${card[cfg.cardImg] || ''}" alt="${card[cfg.cardName] || ''}">`;
+        slide.className = 'detail-slide';
+        slide.innerHTML = `<img src="${card[cfg.cardImg] || ''}" loading="lazy" alt="">`;
         swiper.appendChild(slide);
     });
 
-    swiper.scrollLeft = idx * window.innerWidth;
-    updateDetailInfo(idx);
+    // 애니메이션 없이 즉시 해당 카드로 이동
+    swiper.style.scrollBehavior = 'auto';
+    swiper.scrollLeft = idx * swiper.offsetWidth;
+    requestAnimationFrame(() => { swiper.style.scrollBehavior = ''; });
 
+    updateDetailInfo(idx);
     document.getElementById('detail-view').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
 
 function onSwiperScroll() {
-    const swiper = document.getElementById('swiper-wrap');
-    const newIdx = Math.round(swiper.scrollLeft / window.innerWidth);
-    if (newIdx !== curDetailIdx && newIdx >= 0 && newIdx < masterCards.length) {
-        curDetailIdx = newIdx;
-        updateDetailInfo(newIdx);
-    }
+    if (swiperTimer) clearTimeout(swiperTimer);
+    swiperTimer = setTimeout(() => {
+        const swiper = document.getElementById('detail-swiper');
+        const newIdx = Math.round(swiper.scrollLeft / swiper.offsetWidth);
+        if (newIdx !== curDetailIdx && newIdx >= 0 && newIdx < masterCards.length) {
+            curDetailIdx = newIdx;
+            updateDetailInfo(newIdx);
+        }
+    }, 80);
 }
 
 function updateDetailInfo(idx) {
     const card = masterCards[idx];
-    const cfg = PLAT_CFG[curPlat];
+    const cfg = CFG[curPlat];
 
     document.getElementById('detail-counter').textContent = `${idx + 1} / ${masterCards.length}`;
     document.getElementById('detail-name').textContent = card[cfg.cardName] || '이름 없음';
 
-    // find set name
     const set = filteredSets.find(s => s.id === card[cfg.setFK]);
-    const setLabel = set ? (set[cfg.setFull] || set[cfg.setName] || '') : '';
-    document.getElementById('detail-set-badge').textContent = setLabel;
+    document.getElementById('detail-set-badge').textContent = set ? (set[cfg.setFull] || set[cfg.setName] || '') : '';
 
     const rows = [
         ['Number', card[cfg.cardNum]],
         ['HP', card[cfg.hp]],
         ['Rarity', card[cfg.rarity]],
-        cfg.supertype ? ['Type', card[cfg.supertype]] : null,
-        cfg.regulation ? ['Regulation', card[cfg.regulation]] : null,
-        card.stage ? ['Stage', card.stage] : null,
-        cfg.artist && card[cfg.artist] ? ['Artist', Array.isArray(card[cfg.artist]) ? card[cfg.artist].join(', ') : card[cfg.artist]] : null,
-        card.pokedex_number ? ['Pokédex No.', '#' + card.pokedex_number] : null,
-        card.pokemon_category ? ['Category', card.pokemon_category] : null,
-        card.height ? ['Height', card.height] : null,
-        card.weight ? ['Weight', card.weight] : null,
-    ].filter(Boolean).filter(r => r[1] !== null && r[1] !== undefined && r[1] !== '');
+        cfg.supertype  ? ['Type', card[cfg.supertype]]       : null,
+        cfg.regulation ? ['Regulation', card[cfg.regulation]]: null,
+        card.stage     ? ['Stage', card.stage]               : null,
+        (cfg.artist && card[cfg.artist]) ? ['Artist', Array.isArray(card[cfg.artist]) ? card[cfg.artist].join(', ') : card[cfg.artist]] : null,
+        card.pokedex_number   ? ['Pokédex No.', '#' + card.pokedex_number] : null,
+        card.pokemon_category ? ['Category', card.pokemon_category]        : null,
+        card.height           ? ['Height', card.height]                    : null,
+        card.weight           ? ['Weight', card.weight]                    : null,
+    ].filter(r => r && r[1] !== null && r[1] !== undefined && r[1] !== '');
 
-    document.getElementById('detail-rows').innerHTML = rows.map(([label, val]) => `
-        <div class="info-row">
-            <span class="info-label">${label}</span>
-            <span class="info-val">${val}</span>
-        </div>
-    `).join('');
+    document.getElementById('detail-rows').innerHTML = rows.map(([label, val]) =>
+        `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${val}</span></div>`
+    ).join('');
 
     const flavorEl = document.getElementById('detail-flavor');
     const flavorVal = cfg.flavor ? card[cfg.flavor] : null;
-    if (flavorVal) {
-        flavorEl.style.display = 'block';
-        flavorEl.textContent = flavorVal;
-    } else {
-        flavorEl.style.display = 'none';
-    }
+    if (flavorVal) { flavorEl.style.display = 'block'; flavorEl.textContent = flavorVal; }
+    else { flavorEl.style.display = 'none'; }
 
     document.querySelector('.info-sheet').scrollTop = 0;
 }
@@ -755,7 +661,6 @@ function closeDetail() {
     document.body.style.overflow = '';
 }
 
-// ── START ────────────────────────────────────────────
 init();
 </script>
 </body>
